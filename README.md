@@ -1,5 +1,10 @@
 # Robot Chalao 🤖
 
+![demo](docs/img/demo.gif)
+
+*RViz simulation (Kinova Gen3). Robot Chalao .rc to Kinova Gen3: pick and place*
+
+
 **Hinglish mein likho, koi bhi ROS 2 robot chalao.**
 **Write Hinglish, run any ROS 2 robot.**
 
