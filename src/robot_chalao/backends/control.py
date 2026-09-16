@@ -113,6 +113,6 @@ class ControlBackend(Backend):
         # There is no universal torque service; document the two common routes.
         raise RCBackendError(
             msg_hi="torque %s: driver-specific hai" % ("on" if on else "off"),
-            hint_en="wire this to your arm's enable/disable service (e.g. Kortex "
+            hint_en="wire this to your arm's enable/disable service (vendor-specific "
                     "SendGripperCommand / a hardware_interface param); left "
                     "unimplemented on purpose so it fails loud, not wrong")

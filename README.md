@@ -4,7 +4,6 @@
 
 *RViz simulation (Kinova Gen3). Robot Chalao .rc to Kinova Gen3: pick and place*
 
-
 **Hinglish mein likho, koi bhi ROS 2 robot chalao.**
 **Write Hinglish, run any ROS 2 robot.**
 
@@ -227,5 +226,3 @@ test suite green.
 ## License
 
 MIT. Banaya / built by Gaus Mohiuddin Sayyad ([megazron](https://github.com/megazron)).
-Grew out of the wearable dual-arm Kinova Gen3 MSc project at Imperial College London:
-<https://github.com/megazron/Multimodal-control-of-a-wearable-dual-arm-robotic-system-for-assisted-object-manipulation>.
