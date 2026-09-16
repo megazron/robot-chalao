@@ -1,0 +1,20 @@
+# 05 — Drone takeoff, fly a square, land
+# Drone udega, ek square banayega, phir utrega.
+# Needs a "drone" robot in chalao.yaml (type: drone, backends: {drone: mavros, base: mavros}).
+
+robot jodo "drone"
+udaan bharo
+height 2 meter
+dikhao "Drone hawa mein hai, 2 meter par."
+
+# Chaar side ka square / four sides of a square
+har side [1, 2, 3, 4] mein karo
+    dikhao "Side", side
+    aage chalo 2 meter
+    ghumo 90 degree
+    ruko 1 second
+khatam
+
+dikhao "Square poora. Ab neeche utrenge."
+utro
+robot chhodo

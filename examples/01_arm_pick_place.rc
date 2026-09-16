@@ -1,0 +1,16 @@
+# arm pick and place -- ek dabbe ko uthao aur doosri jagah rakho
+robot jodo "ur5"
+speed 0.4
+
+ghar jao
+
+maano pick = pose(0.4, 0.1, 0.2, 0, 3.14, 0)
+jao pick
+pakdo
+seedha jao (0.4, 0.1, 0.4)
+
+jao pose(0.4, -0.2, 0.2, 0, 3.14, 0)
+chhodo
+
+ghar jao
+robot chhodo

@@ -1,0 +1,27 @@
+# Robot Chalao config -- har robot ka setup yahan.
+default_robot: ur5
+
+robots:
+  ur5:
+    type: arm
+    planning_group: manipulator
+    ee_link: tool0
+    base_link: base_link
+    gripper: {action: "/gripper_controller/gripper_cmd"}
+    named_poses:
+      home: [0.0, -1.57, 0.0, -1.57, 0.0, 0.0]
+      ready: [0.0, -1.0, 1.0, -1.57, -1.57, 0.0]
+    speed_limit: 0.5
+    workspace: {xmin: -0.8, xmax: 0.8, ymin: -0.8, ymax: 0.8, zmin: 0.0, zmax: 1.2}
+    cameras: {main: "/camera/color/image_raw", depth: "/camera/depth/image_raw"}
+    backends: {arm: moveit, perception: perception, raw: raw}
+
+  turtlebot:
+    type: mobile
+    cmd_vel: /cmd_vel
+    cameras: {main: "/camera/image_raw"}
+    backends: {base: nav2, perception: perception, raw: raw}
+
+  drone1:
+    type: drone
+    backends: {drone: mavros, perception: perception, raw: raw}

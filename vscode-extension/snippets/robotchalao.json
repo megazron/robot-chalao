@@ -1,0 +1,67 @@
+{
+  "if / agar": {
+    "prefix": "agar",
+    "body": ["agar ${1:condition} toh", "\t$0", "warna", "\t", "khatam"],
+    "description": "if / else block"
+  },
+  "while / jab tak": {
+    "prefix": "jabtak",
+    "body": ["jab tak ${1:condition} karo", "\t$0", "khatam"],
+    "description": "while loop"
+  },
+  "for-each / har": {
+    "prefix": "har",
+    "body": ["har ${1:item} ${2:list} mein karo", "\t$0", "khatam"],
+    "description": "for-each loop"
+  },
+  "function / kaam": {
+    "prefix": "kaam",
+    "body": ["kaam ${1:naam}(${2:args})", "\t$0", "\twapas ${3:value}", "khatam"],
+    "description": "function definition"
+  },
+  "try / koshish": {
+    "prefix": "koshish",
+    "body": ["koshish", "\t$0", "galti hone par ${1:e}", "\tdikhao \"galti:\", ${1:e}", "khatam"],
+    "description": "try / except block"
+  },
+  "timer / har second": {
+    "prefix": "timer",
+    "body": ["har ${1:0.1} second mein", "\t$0", "khatam"],
+    "description": "timer loop"
+  },
+  "connect robot / robot jodo": {
+    "prefix": "jodo",
+    "body": ["robot jodo \"${1:ur5}\"", "$0", "robot chhodo"],
+    "description": "connect and disconnect a robot"
+  },
+  "arm go to pose / jao pose": {
+    "prefix": "jaopose",
+    "body": ["jao pose(${1:0.4}, ${2:0.1}, ${3:0.2}, ${4:0}, ${5:3.14}, ${6:0})"],
+    "description": "move the arm to a pose"
+  },
+  "cartesian / seedha jao": {
+    "prefix": "seedha",
+    "body": ["seedha jao (${1:x}, ${2:y}, ${3:z})"],
+    "description": "straight-line Cartesian move"
+  },
+  "drive forward / aage chalo": {
+    "prefix": "aage",
+    "body": ["aage chalo ${1:1} meter"],
+    "description": "drive the base forward"
+  },
+  "navigate / yahan jao": {
+    "prefix": "yahan",
+    "body": ["yahan jao (${1:x}, ${2:y}, ${3:theta})"],
+    "description": "navigate to a map goal"
+  },
+  "find object / object dhundo": {
+    "prefix": "dhundo",
+    "body": ["maano ${1:cheez} = object dhundo \"${2:red cup}\""],
+    "description": "find an object with the camera"
+  },
+  "subscribe / sun": {
+    "prefix": "sun",
+    "body": ["sun \"${1:/topic}\" ${2:std_msgs/String} mein ${3:msg}", "\t$0", "khatam"],
+    "description": "subscribe to a topic"
+  }
+}

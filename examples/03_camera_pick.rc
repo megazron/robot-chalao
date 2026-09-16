@@ -1,0 +1,33 @@
+# 03 — Camera finds an object, then the arm grabs it
+# Camera se object dhundo, phir arm se uthao aur rakho.
+# The camera finds a red cup; the arm approaches, grasps, moves and releases it.
+
+robot jodo "ur5"
+speed 0.3
+ghar jao
+
+dikhao "Camera se 'red cup' dhoondh rahe hain..."
+maano cup = object dhundo "red cup"
+
+agar cup.confidence > 0.5 toh
+    dikhao "Mil gaya:", cup.label, "| confidence:", cup.confidence
+
+    # Grasp pose object ke upar, gripper neeche ki taraf (pitch = 3.14)
+    maano upar  = pose(cup.pose.x, cup.pose.y, cup.pose.z + 0.12, 0, 3.14, 0)
+    maano grasp = pose(cup.pose.x, cup.pose.y, cup.pose.z, 0, 3.14, 0)
+
+    jao upar
+    seedha jao (grasp.x, grasp.y, grasp.z)
+    pakdo
+    seedha jao (grasp.x, grasp.y, grasp.z + 0.15)
+
+    # Rakhne ki jagah / place location
+    jao pose(0.3, -0.3, 0.25, 0, 3.14, 0)
+    chhodo
+    ghar jao
+    dikhao "Cup utha kar rakh diya. Kaam khatam!"
+warna
+    dikhao "Cup nahi mila (confidence kam). Dobara koshish karo."
+khatam
+
+robot chhodo

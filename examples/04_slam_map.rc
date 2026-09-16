@@ -1,0 +1,24 @@
+# 04 — SLAM map building
+# SLAM se naya map banao aur save karo.
+# Start SLAM, drive a small exploration loop, then save the map.
+
+robot jodo "turtlebot"
+map banao
+dikhao "Mapping shuru. Robot thoda ghoomega."
+
+# Ek chhota chakkar / a small square exploration loop
+har side [1, 2, 3, 4] mein karo
+    aage chalo 1 meter
+    ghumo 90 degree
+    ruko 1 second
+khatam
+
+# Thoda aur cover karo / cover a little more area
+aage chalo 2 meter
+ghumo 45 degree
+aage chalo 1 meter
+ruk jao
+
+map save "lab"
+dikhao "Map save ho gaya: lab"
+robot chhodo

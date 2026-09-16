@@ -1,0 +1,35 @@
+# 02 — Mobile robot patrol / Mobile robot 4 waypoint ke beech gasht karta hai
+# Ek mobile base (turtlebot) chaar waypoint ke beech do baar patrol karta hai.
+# A mobile base patrols between four waypoints, twice, checking for obstacles.
+
+robot jodo "turtlebot"
+localize
+dikhao "Patrol shuru ho raha hai..."
+
+maano points = [
+    pose(1.0, 1.0, 0, 0, 0, 0.0),
+    pose(3.0, 1.0, 0, 0, 0, 1.57),
+    pose(3.0, 3.0, 0, 0, 0, 3.14),
+    pose(1.0, 3.0, 0, 0, 0, -1.57)
+]
+
+maano round = 0
+jab tak round < 2 karo
+    dikhao "Round", round + 1
+    har wp points mein karo
+        agar obstacle nazdeek hai? toh
+            dikhao "Aage rukawat hai! Ruk gaye."
+            ruk jao
+            ruko 2 second
+        warna
+            yahan jao (wp.x, wp.y, wp.yaw)
+            dikhao "Waypoint pahunche:", wp
+            ruko 1 second
+        khatam
+    khatam
+    maano round = round + 1
+khatam
+
+ruk jao
+dikhao "Patrol poora ho gaya."
+robot chhodo

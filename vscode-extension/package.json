@@ -1,0 +1,33 @@
+{
+  "name": "robot-chalao",
+  "displayName": "Robot Chalao",
+  "description": "Syntax highlighting and snippets for the Robot Chalao Hinglish robot language (.rc).",
+  "version": "0.1.0",
+  "publisher": "megazron",
+  "license": "MIT",
+  "engines": { "vscode": "^1.75.0" },
+  "categories": ["Programming Languages", "Snippets"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "robotchalao",
+        "aliases": ["Robot Chalao", "robotchalao", "rc"],
+        "extensions": [".rc"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "robotchalao",
+        "scopeName": "source.robotchalao",
+        "path": "./syntaxes/robotchalao.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "robotchalao",
+        "path": "./snippets/robotchalao.json"
+      }
+    ]
+  }
+}

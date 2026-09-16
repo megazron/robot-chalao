@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robot-chalao"
+version = "0.1.0"
+description = "Robot Chalao: a Hinglish programming language for controlling any ROS 2 robot."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Gaus Mohiuddin Sayyad"}]
+dependencies = ["pyyaml>=5.4"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+chalao = "robot_chalao.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
