@@ -21,6 +21,8 @@ static int runFile(const std::string& path) {
     try {
         NodePtr prog = parseSource(ss.str());
         Interpreter interp(true);
+        auto slash = path.find_last_of('/');
+        interp.baseDir = (slash == std::string::npos) ? std::string(".") : path.substr(0, slash);
         interp.run(prog);
     } catch (RCError& e) {
         std::cerr << e.what_hinglish() << "\n";

@@ -1,0 +1,5 @@
+# a reusable module imported by t_import.rc
+kaam dugna(x)
+  wapas x * 2
+khatam
+maano GREETING = "namaste"

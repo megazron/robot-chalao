@@ -1,0 +1,3 @@
+import "imp_mod.rc"
+dikhao GREETING
+dikhao dugna(21)

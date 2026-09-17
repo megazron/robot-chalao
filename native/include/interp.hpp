@@ -8,6 +8,9 @@
 #include <map>
 #include <memory>
 #include <functional>
+#include <fstream>
+#include <sstream>
+#include <set>
 #include <iostream>
 #include <cstdio>
 #include <cmath>
@@ -42,7 +45,9 @@ class Interpreter {
     Value simPose = makePose(0.4, 0.0, 0.3, 0.0, 3.14, 0.0);
     Value simJoints = makeJoints({0.0, -1.57, 0.0, -1.57, 0.0, 0.0});
     static const int TIMER_TICKS = 3;
+    std::set<std::string> imported_;
 public:
+    std::string baseDir;
     explicit Interpreter(bool sim = true) : simulate(sim) {}
     void run(const NodePtr& program) { execBlock(program->kids, globals); }
 
@@ -51,6 +56,24 @@ private:
     static std::string fmtf(const char* f, double a){ char b[128]; std::snprintf(b,sizeof b,f,a); return b; }
 
     void execBlock(const std::vector<NodePtr>& body, const EnvPtr& env) { for (auto& st : body) execStmt(st, env); }
+
+    void doImport(const NodePtr& n) {
+        std::string path = n->s;
+        if (!path.empty() && path[0] != '/' && !baseDir.empty()) path = baseDir + "/" + path;
+        // canonical-ish key to avoid re-importing the same file
+        if (imported_.count(path)) return;
+        std::ifstream f(path);
+        if (!f) throw RCError("import nahi mila: " + n->s, "file not found for import", n->line);
+        imported_.insert(path);
+        std::stringstream ss; ss << f.rdbuf();
+        NodePtr prog = parseSource(ss.str());
+        // nested imports resolve relative to the imported file's own directory
+        std::string prevBase = baseDir;
+        auto slash = path.find_last_of('/');
+        baseDir = (slash == std::string::npos) ? std::string(".") : path.substr(0, slash);
+        execBlock(prog->kids, globals);
+        baseDir = prevBase;
+    }
 
     void execStmt(const NodePtr& n, const EnvPtr& env) {
         switch (n->t) {
@@ -62,6 +85,7 @@ private:
             case NT::ExprStmt: eval(n->a, env); return;
             case NT::Return: throw ReturnEx{ n->a ? eval(n->a, env) : Value::Nil() };
             case NT::Break: throw BreakEx{};
+            case NT::Import: doImport(n); return;
             case NT::If:
                 if (truthy(eval(n->a, env))) execBlock(n->kids, std::make_shared<Env>(env));
                 else if (!n->kids2.empty()) execBlock(n->kids2, std::make_shared<Env>(env));
