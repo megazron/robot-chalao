@@ -170,3 +170,35 @@ condition; the rest of the robot phrases are statements.
 |---|---|
 | `udaan bharo` / `utro` | `takeoff` / `land` |
 | `height 2 meter` | `set_height` |
+
+## Gen-Z aliases
+
+Robot Chalao ships a casual "Gen-Z" vocabulary. Each alias is rewritten to its
+canonical keyword in the lexer, so aliases work everywhere the canonical keyword
+works (including inside multi-word phrases, e.g. `crib slide` → `ghar jao`), old
+Hinglish programs are unaffected, and the native C++ core and the Python
+reference produce byte-identical output. Because they are lexer-level keywords,
+these words are reserved and cannot be used as identifiers.
+
+| Gen-Z | Canonical | Meaning |
+|---|---|---|
+| `linkup` | `jodo` | connect |
+| `dip` | `chhodo` | release / disconnect |
+| `slide` | `jao` | go / move to |
+| `crib` | `ghar` | home |
+| `grab` | `pakdo` | grip (close) |
+| `pace` | `speed` | set speed |
+| `flex` | `dikhao` | print |
+| `bet` | `maano` | variable binding |
+| `lowkey` | `agar` | if |
+| `naur` | `warna` | else |
+| `every` | `har` | for-each |
+| `combo` | `kaam` | function |
+| `tryna` | `koshish` | try |
+| `mybad` | `galti` | catch |
+| `sendit` | `wapas` | return |
+| `nocap` | `sach` | true |
+| `cap` | `jhooth` | false |
+| `chill` | `ruk` | stop |
+| `yap` | `bolo` | say / speak |
+| `peep` | `dekho` | watch / subscribe |

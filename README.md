@@ -110,6 +110,48 @@ A summary:
 | `koshish … galti hone par e … khatam` | try / except |
 | `ruko_loop` / `import "x.rc"` | break / import |
 
+## Gen-Z mode 💅
+
+Hinglish feeling like too much? Write it in casual slang instead. These are
+**aliases**, not a new language: they map to the exact same keywords, so old
+Hinglish programs keep working and you can even mix both in one file. Example 06
+is example 01 rewritten in Gen-Z and prints byte-for-byte the same output.
+
+| Gen-Z | Canonical | does |
+|---|---|---|
+| `linkup` | `jodo` | connect |
+| `dip` | `chhodo` | let go / disconnect |
+| `slide` | `jao` | go / move to |
+| `crib` | `ghar` | home |
+| `grab` | `pakdo` | grip |
+| `pace` | `speed` | set speed |
+| `flex` | `dikhao` | print / show |
+| `bet` | `maano` | variable (`bet x = 5`) |
+| `lowkey … naur` | `agar … warna` | if / else |
+| `every` | `har` | for-each |
+| `combo` | `kaam` | function |
+| `tryna … mybad` | `koshish … galti` | try / catch |
+| `sendit` | `wapas` | return |
+| `nocap / cap` | `sach / jhooth` | true / false |
+| `chill` | `ruk` | stop |
+| `yap` | `bolo` | say |
+| `peep` | `dekho` | watch |
+
+```
+robot linkup "ur5"          # connect
+pace 0.4
+crib slide                  # go home
+bet pick = pose(0.4, 0.1, 0.2, 0, 3.14, 0)
+slide pick                  # move to it
+grab                        # close gripper
+lowkey battery() > 20 toh
+    flex "we good, no cap"
+naur
+    flex "lowkey need a charge"
+khatam
+robot dip                   # disconnect
+```
+
 **Robot commands** (full mapping in `docs/GRAMMAR.md`): connection (`robot jodo`,
 `robot chhodo`, `namespace`, `param`), arm via MoveIt 2 (`ghar jao`, `jao pose(...)`,
 `seedha jao`, `pakdo`/`chhodo`, `speed`, `planner`, `rukawat jodo`, `attach`, `kahan hai`,

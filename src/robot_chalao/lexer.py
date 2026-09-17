@@ -176,6 +176,19 @@ class Lexer:
                 break
         return Token(TokenType.NUMBER, "".join(buf), line, col)
 
+    # Gen-Z slang -> canonical keyword. Aliases only: Hinglish still works, but
+    # you can write it casually too (linkup->jodo, crib slide->ghar jao,
+    # flex->dikhao). Applied at the identifier level so every rule and every
+    # multi-word phrase just works. Kept byte-identical to the native core.
+    _GENZ = {
+        "linkup": "jodo", "dip": "chhodo", "slide": "jao", "crib": "ghar",
+        "grab": "pakdo", "pace": "speed", "flex": "dikhao", "bet": "maano",
+        "lowkey": "agar", "naur": "warna", "every": "har", "combo": "kaam",
+        "tryna": "koshish", "mybad": "galti", "sendit": "wapas",
+        "nocap": "sach", "cap": "jhooth", "chill": "ruk", "yap": "bolo",
+        "peep": "dekho",
+    }
+
     def _ident(self, line: int, col: int) -> Token:
         buf = []
         while self.i < len(self.src):
@@ -184,7 +197,8 @@ class Lexer:
                 buf.append(self._advance())
             else:
                 break
-        return Token(TokenType.IDENT, "".join(buf), line, col)
+        word = "".join(buf)
+        return Token(TokenType.IDENT, self._GENZ.get(word, word), line, col)
 
 
 def tokenize(src: str) -> list[Token]:

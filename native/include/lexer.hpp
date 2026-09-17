@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <cctype>
+#include <unordered_map>
 #include "ast.hpp"
 
 enum class TT { Number, String, Ident, Op, Newline, Eof };
@@ -85,9 +86,28 @@ private:
         }
         return {TT::Number, buf, l, c};
     }
+    // Gen-Z slang -> canonical keyword. These are aliases: the whole language
+    // still works in Hinglish, but you can write it casually too, e.g.
+    //   linkup "ur5"   ->  jodo "ur5"      (connect)
+    //   crib slide     ->  ghar jao        (go home)
+    //   flex "done"    ->  dikhao "done"   (print)
+    // Applied at the identifier level so every rule and multi-word phrase just
+    // works, and native + Python stay byte-identical.
+    static const std::string& canonGenZ(const std::string& w) {
+        static const std::unordered_map<std::string, std::string> m = {
+            {"linkup","jodo"}, {"dip","chhodo"}, {"slide","jao"}, {"crib","ghar"},
+            {"grab","pakdo"}, {"pace","speed"}, {"flex","dikhao"}, {"bet","maano"},
+            {"lowkey","agar"}, {"naur","warna"}, {"every","har"}, {"combo","kaam"},
+            {"tryna","koshish"}, {"mybad","galti"}, {"sendit","wapas"},
+            {"nocap","sach"}, {"cap","jhooth"}, {"chill","ruk"}, {"yap","bolo"},
+            {"peep","dekho"},
+        };
+        auto it = m.find(w);
+        return it == m.end() ? w : it->second;
+    }
     Token ident(int l, int c) {
         std::string buf;
         while (i < src.size()) { char ch = peek(); if (std::isalnum((unsigned char)ch) || ch == '_') buf += advance(); else break; }
-        return {TT::Ident, buf, l, c};
+        return {TT::Ident, canonGenZ(buf), l, c};
     }
 };
