@@ -2,7 +2,7 @@
 
 ![demo](docs/img/demo.gif)
 
-*Robot Chalao `.rc` code in short mode (`rakh`, `bol`, `bas`), the `chalao run --simulate` output, and the Kinova Gen3 executing it in RViz.*
+*Robot Chalao `.rc` code in short mode (`rakh`, `bol`, `bas`), the `chalao run --simulate` output, and the Kinova Gen3 executing it in MuJoCo.*
 
 **Hinglish mein likho, koi bhi ROS 2 robot chalao.**
 **Write Hinglish, run any ROS 2 robot.**
