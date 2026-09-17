@@ -6,3 +6,6 @@ build/
 dist/
 *.bag/
 node_modules/
+
+native/chalao
+native/*.o
