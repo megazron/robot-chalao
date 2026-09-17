@@ -1,0 +1,11 @@
+kaam fact(n)
+    agar n <= 1 toh
+        wapas 1
+    khatam
+    wapas n * fact(n - 1)
+khatam
+dikhao "5! =", fact(5)
+kaam add(a, b)
+    wapas a + b
+khatam
+dikhao add(3, 4)

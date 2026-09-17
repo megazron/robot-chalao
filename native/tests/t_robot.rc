@@ -1,0 +1,12 @@
+robot jodo "arm1"
+speed 0.5
+ghar jao
+maano p = pose(0.1, 0.2, 0.3, 0, 0, 0)
+jao p
+pakdo
+aage chalo 2 meter
+ghumo 45 degree
+maano c = object dhundo "cube"
+dikhao "mila:", c.label, c.confidence
+band karo
+robot chhodo

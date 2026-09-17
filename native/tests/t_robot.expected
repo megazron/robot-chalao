@@ -1,0 +1,11 @@
+[nakli] robot 'arm1' se jud gaye
+[nakli] speed set: 0.50
+[nakli] arm ghar (home) ja raha hai
+[nakli] pose pe ja raha hai: Pose(x=0.100, y=0.200, z=0.300, roll=0.000, pitch=0.000, yaw=0.000)
+[nakli] gripper band (pakad raha hai)
+[nakli] aage chal raha hai 2.00 meter
+[nakli] ghoom raha hai 45.0 degree
+[nakli] dhoondh raha hai: 'cube' ... mil gaya
+mila: cube 0.91
+[nakli] !! BAND KARO -- sab kuch ruk gaya (e-stop) !!
+[nakli] robot chhod diya

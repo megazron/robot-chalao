@@ -1,0 +1,17 @@
+maano x = 5
+agar x > 3 toh
+    dikhao "bada"
+warna
+    dikhao "chhota"
+khatam
+maano i = 0
+jab tak i < 3 karo
+    dikhao "i", i
+    maano i = i + 1
+khatam
+har n [10, 20, 30] mein karo
+    agar n == 20 toh
+        ruko_loop
+    khatam
+    dikhao "n", n
+khatam

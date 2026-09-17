@@ -41,6 +41,15 @@ chalao run pehla.rc --simulate --config examples/chalao.yaml
 *Ek front-end, do back-end: abhi chalao, ya jo Python banega use padho. One front-end,
 two back-ends: interpret it now, or read the generated Python.*
 
+## Native core (C++)
+
+Robot Chalao now ships a **native C++17 interpreter** in [`native/`](native/) alongside the Python reference — the language's compiled foundation. Build it with `make -C native` to get a standalone `chalao` binary (no Python, no dependencies) that runs the same `.rc` programs, byte-for-byte identical to the reference:
+
+```bash
+make -C native
+./native/chalao run examples/01_arm_pick_place.rc
+```
+
 ## Kise ke liye? / Who is this for
 
 Bharat mein bahut log Hinglish mein sochte hain par ROS 2 ka learning curve unko rok

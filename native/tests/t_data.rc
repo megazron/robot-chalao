@@ -1,0 +1,9 @@
+maano nums = [1, 2, 3]
+dikhao "count", len(nums)
+maano total = 0
+har x nums mein karo
+    maano total = total + x
+khatam
+dikhao "sum", total
+maano d = {"naam": "robot", "age": 3}
+dikhao d.naam, d.age

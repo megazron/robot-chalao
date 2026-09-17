@@ -1,0 +1,8 @@
+dikhao 2 + 3 * 4
+dikhao 10 / 4
+dikhao 7 % 3
+dikhao (2 + 3) * 4
+dikhao -5 + 2
+dikhao 2 == 2, 2 != 3, 3 < 5, 5 <= 5
+dikhao sach aur jhooth, sach ya jhooth, nahi jhooth
+dikhao "hin" + "glish"
