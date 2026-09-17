@@ -176,17 +176,13 @@ class Lexer:
                 break
         return Token(TokenType.NUMBER, "".join(buf), line, col)
 
-    # Gen-Z slang -> canonical keyword. Aliases only: Hinglish still works, but
-    # you can write it casually too (linkup->jodo, crib slide->ghar jao,
-    # flex->dikhao). Applied at the identifier level so every rule and every
+    # Short aliases -> canonical keyword. Aliases only: full Hinglish still
+    # works, but you can type the common ones short (bas->khatam, bol->dikhao,
+    # rakh->maano). Applied at the identifier level so every rule and every
     # multi-word phrase just works. Kept byte-identical to the native core.
-    _GENZ = {
-        "linkup": "jodo", "dip": "chhodo", "slide": "jao", "crib": "ghar",
-        "grab": "pakdo", "pace": "speed", "flex": "dikhao", "bet": "maano",
-        "lowkey": "agar", "naur": "warna", "every": "har", "combo": "kaam",
-        "tryna": "koshish", "mybad": "galti", "sendit": "wapas",
-        "nocap": "sach", "cap": "jhooth", "chill": "ruk", "yap": "bolo",
-        "peep": "dekho",
+    _SHORT = {
+        "bas": "khatam", "bol": "dikhao", "rakh": "maano",
+        "try": "koshish", "de": "wapas", "tod": "ruko_loop",
     }
 
     def _ident(self, line: int, col: int) -> Token:
@@ -198,7 +194,7 @@ class Lexer:
             else:
                 break
         word = "".join(buf)
-        return Token(TokenType.IDENT, self._GENZ.get(word, word), line, col)
+        return Token(TokenType.IDENT, self._SHORT.get(word, word), line, col)
 
 
 def tokenize(src: str) -> list[Token]:

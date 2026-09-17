@@ -110,46 +110,35 @@ A summary:
 | `koshish … galti hone par e … khatam` | try / except |
 | `ruko_loop` / `import "x.rc"` | break / import |
 
-## Gen-Z mode 💅
+## Short forms
 
-Hinglish feeling like too much? Write it in casual slang instead. These are
+Don't want to type the long keywords? Use the short aliases. These are
 **aliases**, not a new language: they map to the exact same keywords, so old
-Hinglish programs keep working and you can even mix both in one file. Example 06
-is example 01 rewritten in Gen-Z and prints byte-for-byte the same output.
+programs keep working and you can mix both in one file. Example 06 uses them and
+prints byte-for-byte the same output as example 01.
 
-| Gen-Z | Canonical | does |
+| Short | Full | does |
 |---|---|---|
-| `linkup` | `jodo` | connect |
-| `dip` | `chhodo` | let go / disconnect |
-| `slide` | `jao` | go / move to |
-| `crib` | `ghar` | home |
-| `grab` | `pakdo` | grip |
-| `pace` | `speed` | set speed |
-| `flex` | `dikhao` | print / show |
-| `bet` | `maano` | variable (`bet x = 5`) |
-| `lowkey … naur` | `agar … warna` | if / else |
-| `every` | `har` | for-each |
-| `combo` | `kaam` | function |
-| `tryna … mybad` | `koshish … galti` | try / catch |
-| `sendit` | `wapas` | return |
-| `nocap / cap` | `sach / jhooth` | true / false |
-| `chill` | `ruk` | stop |
-| `yap` | `bolo` | say |
-| `peep` | `dekho` | watch |
+| `bas` | `khatam` | end a block |
+| `bol` | `dikhao` | print |
+| `rakh` | `maano` | variable (`rakh x = 5`) |
+| `try` | `koshish` | try |
+| `de` | `wapas` | return |
+| `tod` | `ruko_loop` | break a loop |
 
 ```
-robot linkup "ur5"          # connect
-pace 0.4
-crib slide                  # go home
-bet pick = pose(0.4, 0.1, 0.2, 0, 3.14, 0)
-slide pick                  # move to it
-grab                        # close gripper
-lowkey battery() > 20 toh
-    flex "we good, no cap"
-naur
-    flex "lowkey need a charge"
-khatam
-robot dip                   # disconnect
+robot jodo "ur5"
+speed 0.4
+ghar jao
+rakh pick = pose(0.4, 0.1, 0.2, 0, 3.14, 0)   # rakh = maano
+jao pick
+pakdo
+agar battery kitni hai > 20 toh
+    bol "battery theek hai"                    # bol = dikhao
+warna
+    bol "charge chahiye"
+bas                                            # bas = khatam
+robot chhodo
 ```
 
 **Robot commands** (full mapping in `docs/GRAMMAR.md`): connection (`robot jodo`,

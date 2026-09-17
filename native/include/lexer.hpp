@@ -86,21 +86,17 @@ private:
         }
         return {TT::Number, buf, l, c};
     }
-    // Gen-Z slang -> canonical keyword. These are aliases: the whole language
-    // still works in Hinglish, but you can write it casually too, e.g.
-    //   linkup "ur5"   ->  jodo "ur5"      (connect)
-    //   crib slide     ->  ghar jao        (go home)
-    //   flex "done"    ->  dikhao "done"   (print)
+    // Short aliases -> canonical keyword. These are aliases: the whole language
+    // still works in full Hinglish, but you can type the common ones short, e.g.
+    //   bas   ->  khatam    (end a block)
+    //   bol   ->  dikhao    (print)
+    //   rakh  ->  maano     (variable)
     // Applied at the identifier level so every rule and multi-word phrase just
     // works, and native + Python stay byte-identical.
-    static const std::string& canonGenZ(const std::string& w) {
+    static const std::string& canonShort(const std::string& w) {
         static const std::unordered_map<std::string, std::string> m = {
-            {"linkup","jodo"}, {"dip","chhodo"}, {"slide","jao"}, {"crib","ghar"},
-            {"grab","pakdo"}, {"pace","speed"}, {"flex","dikhao"}, {"bet","maano"},
-            {"lowkey","agar"}, {"naur","warna"}, {"every","har"}, {"combo","kaam"},
-            {"tryna","koshish"}, {"mybad","galti"}, {"sendit","wapas"},
-            {"nocap","sach"}, {"cap","jhooth"}, {"chill","ruk"}, {"yap","bolo"},
-            {"peep","dekho"},
+            {"bas","khatam"}, {"bol","dikhao"}, {"rakh","maano"},
+            {"try","koshish"}, {"de","wapas"}, {"tod","ruko_loop"},
         };
         auto it = m.find(w);
         return it == m.end() ? w : it->second;
@@ -108,6 +104,6 @@ private:
     Token ident(int l, int c) {
         std::string buf;
         while (i < src.size()) { char ch = peek(); if (std::isalnum((unsigned char)ch) || ch == '_') buf += advance(); else break; }
-        return {TT::Ident, canonGenZ(buf), l, c};
+        return {TT::Ident, canonShort(buf), l, c};
     }
 };

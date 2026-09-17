@@ -1,0 +1,14 @@
+# short mode: common keywords typed short
+rakh x = 5
+agar x > 3 toh
+    bol "bada"
+warna
+    bol "chhota"
+bas
+har n [10, 20, 30] mein karo
+    bol "n", n
+bas
+rakh ok = sach
+agar ok toh
+    bol "theek hai"
+bas
