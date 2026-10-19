@@ -9,3 +9,5 @@ node_modules/
 
 native/chalao
 native/*.o
+
+.venv/

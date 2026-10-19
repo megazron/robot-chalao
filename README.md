@@ -208,6 +208,17 @@ deta hai — seekhne aur debug karne ke liye.
 chalao transpile examples/01_arm_pick_place.rc -o arm.py
 ```
 
+## Mobile-base interruption handling
+
+Timed Nav2-backend moves attempt a zero-velocity command on completion or an
+exception, including Ctrl+C. Disconnect also attempts a stop before destroying
+the publisher. If the stop fails during exception handling, the original failure
+is preserved. Speed limits must be finite and positive; use `ruk jao` to stop.
+
+These are best-effort ROS commands. They cannot confirm that a disconnected
+robot stopped; configure the base controller's command timeout/watchdog. The
+regression tests use a fake publisher and do not claim hardware validation.
+
 ## Plugin architecture
 
 ![Plugin architecture](docs/img/plugins.svg)

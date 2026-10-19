@@ -79,6 +79,11 @@ class Nav2Backend(Backend):
 
     def disconnect(self):
         import contextlib
+        # Stop before destroying the publisher. This is a best-effort ROS
+        # command, not a replacement for the base controller's watchdog.
+        with contextlib.suppress(Exception):
+            if self._pub is not None:
+                self._twist(0.0, 0.0)
         with contextlib.suppress(Exception):
             if self._nav is not None:
                 self._nav.lifecycleShutdown()
@@ -136,11 +141,25 @@ class Nav2Backend(Backend):
         return True
 
     def _drive_for(self, v, w, duration):
-        end = time.monotonic() + duration
-        while time.monotonic() < end:
-            self._twist(v, w)
-            time.sleep(0.05)
-        self._twist(0.0, 0.0)
+        values = (v, w, duration)
+        if any(not math.isfinite(float(value)) for value in values) or duration < 0:
+            raise RCBackendError(msg_hi="drive command galat hai",
+                                 hint_en="velocities and duration must be finite; duration must be nonnegative")
+        try:
+            end = time.monotonic() + duration
+            while time.monotonic() < end:
+                self._twist(v, w)
+                time.sleep(0.05)
+        except BaseException:
+            # Preserve the original error/KeyboardInterrupt if ROS also fails
+            # while we attempt the final stop.
+            try:
+                self._twist(0.0, 0.0)
+            except Exception:
+                pass
+            raise
+        else:
+            self._twist(0.0, 0.0)
 
     # ------------------------------------------------------------- nav2
     def _navigator(self):
@@ -233,7 +252,11 @@ class Nav2Backend(Backend):
 
     def set_speed_limit(self, v):
         """Shared with the safety verb `speed limit`; caps the open-loop speed."""
-        self._speed_lin = min(self._speed_lin, float(v))
+        v = float(v)
+        if not math.isfinite(v) or v <= 0:
+            raise RCBackendError(msg_hi="speed limit galat hai",
+                                 hint_en="speed limit must be finite and positive; use `ruk jao` to stop")
+        self._speed_lin = min(self._speed_lin, v)
         return self._speed_lin
 
 
