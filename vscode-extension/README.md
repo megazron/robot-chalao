@@ -15,15 +15,15 @@ robot language (`.rc` files).
 Download `robot-chalao-<version>.vsix` from the [latest release](https://github.com/megazron/robot-chalao/releases/latest), then:
 
 ```bash
-code --install-extension robot-chalao-1.0.0.vsix
+code --install-extension robot-chalao-1.0.1.vsix
 ```
 
 ## Build from source
 ```bash
 cd vscode-extension
 npm install -g @vscode/vsce   # once
-vsce package                  # makes robot-chalao-1.0.0.vsix
-code --install-extension robot-chalao-1.0.0.vsix
+vsce package                  # makes robot-chalao-1.0.1.vsix
+code --install-extension robot-chalao-1.0.1.vsix
 ```
 Or copy this folder into `~/.vscode/extensions/robot-chalao/` and reload VS Code.
 

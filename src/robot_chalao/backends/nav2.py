@@ -145,6 +145,7 @@ class Nav2Backend(Backend):
         if any(not math.isfinite(float(value)) for value in values) or duration < 0:
             raise RCBackendError(msg_hi="drive command galat hai",
                                  hint_en="velocities and duration must be finite; duration must be nonnegative")
+        self._wait_for_listener()
         try:
             end = time.monotonic() + duration
             while time.monotonic() < end:
@@ -160,6 +161,21 @@ class Nav2Backend(Backend):
             raise
         else:
             self._twist(0.0, 0.0)
+
+    def _wait_for_listener(self, timeout=3.0):
+        """A timed move is open loop: commands sent before DDS has matched the
+        base controller are lost and the robot drives short. Wait for it."""
+        count = getattr(self._pub, "get_subscription_count", None)
+        if count is None:
+            return
+        end = time.monotonic() + timeout
+        while count() == 0:
+            if time.monotonic() >= end:
+                raise RCBackendError(
+                    msg_hi="%s ko koi sun nahi raha -- base controller chal raha hai?"
+                           % self._cmd_vel_topic,
+                    hint_en="no subscriber on %s after %.0f s" % (self._cmd_vel_topic, timeout))
+            time.sleep(0.05)
 
     # ------------------------------------------------------------- nav2
     def _navigator(self):

@@ -2,10 +2,15 @@
 
 All notable changes to Robot Chalao. Versions follow [Semantic Versioning](https://semver.org).
 
-## [Unreleased]
+## [1.0.1] - 2026-10-19
 
 ### Added
 - Browser playground at https://megazron.github.io/robot-chalao/ (Pyodide), deployed from `site/` on every push to main.
+
+### Fixed
+- Timed base moves (`aage chalo`, `ghumo`, ...) could start publishing before DDS had
+  matched the base controller, so the robot drove short or not at all. They now wait up
+  to 3 s for a `cmd_vel` subscriber and fail with a clear message if none appears.
 
 ## [1.0.0] - 2026-10-19
 
@@ -55,5 +60,6 @@ Initial release: lexer, parser, interpreter, transpiler to rclpy, `--simulate`
 backend, MoveIt 2 / Nav2 / perception / raw / ros2_control / Gazebo / MAVROS
 backends, Hinglish errors, `chalao doctor`, VS Code syntax highlighting.
 
+[1.0.1]: https://github.com/megazron/robot-chalao/releases/tag/v1.0.1
 [1.0.0]: https://github.com/megazron/robot-chalao/releases/tag/v1.0.0
 [0.1.0]: https://github.com/megazron/robot-chalao/commits/main

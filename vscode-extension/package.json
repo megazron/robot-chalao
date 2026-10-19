@@ -2,7 +2,7 @@
   "name": "robot-chalao",
   "displayName": "Robot Chalao",
   "description": "Syntax highlighting and snippets for the Robot Chalao Hinglish robot language (.rc).",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "megazron",
   "license": "MIT",
   "engines": {

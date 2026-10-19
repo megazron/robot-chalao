@@ -69,3 +69,28 @@ def test_completed_drive_sends_stop(monkeypatch):
     monkeypatch.setattr('robot_chalao.backends.nav2.time.sleep', lambda _: None)
     backend._drive_for(.2, 0., .5)
     assert commands == [(.2, 0.), (0., 0.)]
+
+
+def test_timed_drive_waits_for_a_cmd_vel_listener(monkeypatch):
+    class Pub:
+        n = 0
+        def get_subscription_count(self):
+            Pub.n += 1
+            return 1 if Pub.n > 3 else 0   # controller shows up a bit late
+    backend = Nav2Backend()
+    backend._pub = Pub()
+    sent = []
+    backend._twist = lambda v, w: sent.append((v, w, Pub.n))
+    backend._drive_for(0.2, 0.0, 0.0)
+    assert sent and all(n > 3 for *_, n in sent)
+
+
+def test_timed_drive_errors_when_nobody_listens():
+    class Pub:
+        def get_subscription_count(self):
+            return 0
+    backend = Nav2Backend()
+    backend._pub = Pub()
+    backend._twist = lambda *_: pytest.fail("must not publish into the void")
+    with pytest.raises(RCBackendError):
+        backend._wait_for_listener(timeout=0.2)

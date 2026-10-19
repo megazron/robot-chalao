@@ -14,7 +14,7 @@
 #include "parser.hpp"
 #include "interp.hpp"
 
-static const char* VERSION = "1.0.0 (native)";
+static const char* VERSION = "1.0.1 (native)";
 
 static bool readFile(const std::string& path, std::string& out) {
     std::ifstream f(path);

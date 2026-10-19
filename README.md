@@ -54,7 +54,7 @@ two back-ends: interpret it now, or read the generated Python.*
 ## 60-second start
 
 ```bash
-pip install https://github.com/megazron/robot-chalao/releases/download/v1.0.0/robot_chalao-1.0.0-py3-none-any.whl
+pip install https://github.com/megazron/robot-chalao/releases/download/v1.0.1/robot_chalao-1.0.1-py3-none-any.whl
 chalao init mera_robot && cd mera_robot
 chalao run main.rc --simulate      # zero ROS needed
 ```
@@ -74,10 +74,10 @@ the ROS 2 learning curve. Plain commands on top, real ROS 2 underneath.
 
 | What | How |
 |---|---|
-| Language + simulator (Python 3.10+, zero ROS) | `pip install https://github.com/megazron/robot-chalao/releases/download/v1.0.0/robot_chalao-1.0.0-py3-none-any.whl` |
+| Language + simulator (Python 3.10+, zero ROS) | `pip install https://github.com/megazron/robot-chalao/releases/download/v1.0.1/robot_chalao-1.0.1-py3-none-any.whl` |
 | Latest from `main` | `pip install git+https://github.com/megazron/robot-chalao` |
-| Native binary (no Python, static Linux x86_64) | download `chalao-native-v1.0.0-linux-x86_64.tar.gz` from [Releases](https://github.com/megazron/robot-chalao/releases/latest), or `make -C native` |
-| VS Code highlighting + snippets | `code --install-extension robot-chalao-1.0.0.vsix` (from [Releases](https://github.com/megazron/robot-chalao/releases/latest)) |
+| Native binary (no Python, static Linux x86_64) | download `chalao-native-v1.0.1-linux-x86_64.tar.gz` from [Releases](https://github.com/megazron/robot-chalao/releases/latest), or `make -C native` |
+| VS Code highlighting + snippets | `code --install-extension robot-chalao-1.0.1.vsix` (from [Releases](https://github.com/megazron/robot-chalao/releases/latest)) |
 
 For real robots, also install and source ROS 2 (Jazzy or Humble) and whatever your
 robot needs:
@@ -318,9 +318,9 @@ ke liye ek line ka fix deta hai. Checks each dependency and prints a one-line fi
 
 ## VS Code
 
-Syntax highlighting + snippets: install `robot-chalao-1.0.0.vsix` from
+Syntax highlighting + snippets: install `robot-chalao-1.0.1.vsix` from
 [Releases](https://github.com/megazron/robot-chalao/releases/latest)
-(`code --install-extension robot-chalao-1.0.0.vsix`). Source in
+(`code --install-extension robot-chalao-1.0.1.vsix`). Source in
 [`vscode-extension/`](vscode-extension/).
 
 ## Roadmap
