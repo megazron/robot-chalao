@@ -2,6 +2,11 @@
 
 All notable changes to Robot Chalao. Versions follow [Semantic Versioning](https://semver.org).
 
+## [Unreleased]
+
+### Added
+- Browser playground at https://megazron.github.io/robot-chalao/ (Pyodide), deployed from `site/` on every push to main.
+
 ## [1.0.0] - 2026-10-19
 
 First stable release. The language, both interpreters and the CLI are now covered

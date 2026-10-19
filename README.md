@@ -47,6 +47,10 @@ chalao run pehla.rc --simulate --config examples/chalao.yaml
 *Ek front-end, do back-end: abhi chalao, ya jo Python banega use padho. One front-end,
 two back-ends: interpret it now, or read the generated Python.*
 
+## Try it now, in your browser
+
+**[▶ megazron.github.io/robot-chalao](https://megazron.github.io/robot-chalao/)**: write `.rc` code and run it in `--simulate` mode, see the ROS 2 Python it compiles to, and share a link to your program. It runs the real `robot_chalao` package in your browser via Pyodide, with no install and no ROS.
+
 ## 60-second start
 
 ```bash

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robot Chalao Playground</title>
+<meta name="description" content="Write Hinglish, run a ROS 2 robot. Try the Robot Chalao language in your browser: no install, no ROS.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Share+Tech+Mono&family=Saira:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<style>
+:root {
+  --void: #030d05; --panel: #071a0b; --panel2: #0a2410; --line: #15401d;
+  --green: #3dfa46; --cyan: #7ffcd5; --hazard: #ffb300; --red: #ff5a5a;
+  --text: #d6f5d8; --dim: #7fa585;
+  --mono: "Share Tech Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--void); color: var(--text); font-family: "Saira", system-ui, sans-serif; }
+body::after { content: ""; position: fixed; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(61,250,70,.025) 0 1px, transparent 1px 3px); }
+a { color: var(--cyan); }
+header { padding: 20px 24px 12px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
+h1 { margin: 0; font-family: "Barlow Condensed", sans-serif; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 30px; color: var(--green); }
+h1 small { color: var(--dim); font-size: 15px; letter-spacing: .1em; margin-left: 10px; }
+.tag { color: var(--dim); margin: 4px 0 0; font-size: 14px; }
+nav a { font-family: var(--mono); font-size: 13px; margin-left: 16px; text-decoration: none; border-bottom: 1px dashed var(--cyan); }
+main { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; padding: 16px 24px 24px; }
+.plate { background: var(--panel); border: 1px solid var(--line);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  display: flex; flex-direction: column; min-height: 0; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--panel2); }
+.bar .label { font-family: "Barlow Condensed"; text-transform: uppercase; letter-spacing: .12em; color: var(--cyan); font-size: 14px; margin-right: auto; }
+select, button { font-family: var(--mono); font-size: 13px; color: var(--text); background: var(--void); border: 1px solid var(--line); padding: 7px 10px; cursor: pointer; }
+button:hover, select:hover { border-color: var(--green); }
+button.go { background: var(--green); color: var(--void); border-color: var(--green); font-weight: bold; letter-spacing: .08em; }
+button.go:disabled { background: var(--line); border-color: var(--line); color: var(--dim); cursor: wait; }
+button.stop { border-color: var(--red); color: var(--red); }
+.tabs button { border-bottom: 2px solid transparent; background: transparent; }
+.tabs button[aria-selected="true"] { border-color: var(--line) var(--line) var(--green); color: var(--green); }
+.CodeMirror { height: 100%; min-height: 420px; background: var(--void); color: var(--text); font-family: var(--mono); font-size: 14px; }
+.CodeMirror-gutters { background: var(--panel); border-right: 1px solid var(--line); }
+.CodeMirror-linenumber { color: #3b6b43; }
+.CodeMirror-cursor { border-left: 2px solid var(--green); }
+.CodeMirror-selected, .CodeMirror-focused .CodeMirror-selected { background: #16401f; }
+.cm-s-hud .cm-keyword { color: var(--green); font-weight: bold; } .cm-s-hud .cm-builtin { color: var(--cyan); }
+.cm-s-hud .cm-string { color: var(--hazard); } .cm-s-hud .cm-number { color: #ffd76b; }
+.cm-s-hud .cm-comment { color: #4f7a56; font-style: italic; } .cm-s-hud .cm-atom { color: #c39bff; }
+.cm-s-hud .cm-operator { color: var(--dim); } .cm-s-hud .cm-type { color: #9be7ff; }
+.cm-s-hud .cm-variable, .cm-s-hud .cm-variable-2, .cm-s-hud .cm-property, .cm-s-hud .cm-meta, .cm-s-hud .cm-def { color: var(--text); }
+.edwrap { flex: 1; min-height: 0; }
+pre.out { margin: 0; padding: 12px 14px; font-family: var(--mono); font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; overflow: auto; flex: 1; min-height: 420px; }
+.out .sim { color: var(--cyan); } .out .err { color: var(--red); } .out .meta { color: var(--dim); }
+.status { font-family: var(--mono); font-size: 12px; color: var(--dim); padding: 6px 12px; border-top: 1px solid var(--line); }
+.status.ok { color: var(--green); } .status.bad { color: var(--red); }
+.cheats { padding: 0 24px 28px; }
+.cheats h2 { font-family: "Barlow Condensed"; text-transform: uppercase; letter-spacing: .12em; color: var(--green); font-size: 18px; margin: 4px 0 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+.chip { text-align: left; display: block; width: 100%; padding: 8px 10px; background: var(--panel); }
+.chip code { color: var(--green); font-family: var(--mono); white-space: pre-wrap; }
+.chip span { display: block; color: var(--dim); font-family: "Saira"; font-size: 12px; margin-top: 2px; }
+footer { padding: 0 24px 24px; color: var(--dim); font-size: 13px; }
+kbd { font-family: var(--mono); border: 1px solid var(--line); padding: 1px 5px; }
+@media (max-width: 900px) {
+  header, main, .cheats, footer { padding-left: 16px; padding-right: 16px; }
+  main { grid-template-columns: 1fr; }
+  .CodeMirror, pre.out { min-height: 300px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Robot Chalao <small id="ver">playground</small></h1>
+    <p class="tag">Hinglish mein likho, robot chalao. Write Hinglish, run any ROS 2 robot. It runs here in <code>--simulate</code> mode: no install, no ROS.</p>
+  </div>
+  <nav>
+    <a href="https://github.com/megazron/robot-chalao">GitHub</a>
+    <a href="https://github.com/megazron/robot-chalao/blob/main/docs/GRAMMAR.md">Grammar</a>
+    <a href="https://github.com/megazron/robot-chalao/releases/latest">Install</a>
+  </nav>
+</header>
+
+<main>
+  <section class="plate">
+    <div class="bar">
+      <span class="label">program.rc</span>
+      <select id="example" aria-label="Example program"></select>
+      <button id="share" title="Copy a link to this program">Share</button>
+      <button id="run" class="go" disabled>Loading…</button>
+    </div>
+    <div class="edwrap"><textarea id="code"></textarea></div>
+  </section>
+
+  <section class="plate">
+    <div class="bar tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="out">Output</button>
+      <button role="tab" aria-selected="false" data-tab="py">ROS 2 Python</button>
+      <button role="tab" aria-selected="false" data-tab="cfg">chalao.yaml</button>
+      <span class="label" style="margin:0 0 0 auto"></span>
+      <button id="stop" class="stop" hidden>Stop</button>
+    </div>
+    <pre class="out" id="out" data-pane="out"><span class="meta">Python is loading in your browser (first visit takes a few seconds)…</span></pre>
+    <pre class="out" id="py" data-pane="py" hidden></pre>
+    <div class="edwrap" data-pane="cfg" hidden><textarea id="cfg"></textarea></div>
+    <div class="status" id="status">booting…</div>
+  </section>
+</main>
+
+<section class="cheats">
+  <h2>Try a command (click to insert)</h2>
+  <div class="grid" id="chips"></div>
+</section>
+
+<footer>
+  <kbd>Ctrl</kbd>+<kbd>Enter</kbd> runs. Every <code>[nakli]</code> line is the exact ROS 2 call the program would make on a real robot;
+  install with <code>pip install robot-chalao</code> from the <a href="https://github.com/megazron/robot-chalao/releases/latest">latest release</a> and drop <code>--simulate</code> to drive one.
+  MIT · built by <a href="https://github.com/megazron">megazron</a>.
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/mode/simple.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
