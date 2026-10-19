@@ -58,6 +58,8 @@ class PerceptionBackend(Backend):
         self._node = None
         self._cameras = {}
         self._tf_buffer = None
+        self._static_tf = None
+        self._static_frames = {}
         self._tf_listener = None
 
     def connect(self, name, config):
@@ -225,6 +227,38 @@ class PerceptionBackend(Backend):
         return out
 
     # ---------------------------------------------------------- tf
+    def tf_set(self, child, parent, x, y, z, roll, pitch, yaw):
+        """`frame "child" "parent" (x,y,z,r,p,y)` -> a static transform."""
+        self._ensure()
+        import math
+        try:
+            from geometry_msgs.msg import TransformStamped
+            from tf2_ros import StaticTransformBroadcaster
+        except Exception as exc:  # noqa: BLE001
+            raise RCRosMissing(msg_hi="tf2_ros nahi mila",
+                               hint_en="install ros-<distro>-tf2-ros. (%s)"
+                                       % exc) from exc
+        if self._static_tf is None:
+            self._static_tf = StaticTransformBroadcaster(self._node)
+        t = TransformStamped()
+        t.header.stamp = self._node.get_clock().now().to_msg()
+        t.header.frame_id, t.child_frame_id = parent, child
+        t.transform.translation.x = float(x)
+        t.transform.translation.y = float(y)
+        t.transform.translation.z = float(z)
+        cr, sr = math.cos(roll / 2), math.sin(roll / 2)
+        cp, sp = math.cos(pitch / 2), math.sin(pitch / 2)
+        cy, sy = math.cos(yaw / 2), math.sin(yaw / 2)
+        q = t.transform.rotation
+        q.w = cr * cp * cy + sr * sp * sy
+        q.x = sr * cp * cy - cr * sp * sy
+        q.y = cr * sp * cy + sr * cp * sy
+        q.z = cr * cp * sy - sr * sp * cy
+        # a static broadcaster latches only the last send, so resend all frames
+        self._static_frames[child] = t
+        self._static_tf.sendTransform(list(self._static_frames.values()))
+        return True
+
     def tf(self, from_frame, to_frame):
         """`TF pucho "base" se "tool"` -> the transform as a Pose."""
         self._ensure()

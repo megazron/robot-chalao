@@ -4,19 +4,55 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "robot-chalao"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Robot Chalao: a Hinglish programming language for controlling any ROS 2 robot."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [{name = "Gaus Mohiuddin Sayyad"}]
+keywords = ["robotics", "ros2", "moveit", "nav2", "hinglish", "programming-language", "dsl"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Interpreters",
+]
 dependencies = ["pyyaml>=5.4"]
 
 [project.optional-dependencies]
-dev = ["pytest"]
+dev = ["pytest", "ruff"]
+
+[project.urls]
+Homepage = "https://github.com/megazron/robot-chalao"
+Documentation = "https://github.com/megazron/robot-chalao/blob/main/docs/GRAMMAR.md"
+Issues = "https://github.com/megazron/robot-chalao/issues"
+Changelog = "https://github.com/megazron/robot-chalao/blob/main/CHANGELOG.md"
 
 [project.scripts]
 chalao = "robot_chalao.cli:main"
 
+[tool.setuptools.dynamic]
+version = {attr = "robot_chalao.__version__"}
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B"]
+ignore = ["E501", "E701", "B905"]

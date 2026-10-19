@@ -1,0 +1,44 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check the tag matches the package version
+        run: |
+          v=$(python -c "import re;print(re.search(r'__version__ = \"(.+)\"', open('src/robot_chalao/__init__.py').read())[1])")
+          test "v$v" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME != version $v"; exit 1; }
+      - name: Test
+        run: |
+          pip install -e ".[dev]" build
+          python -m pytest -q
+          make -C native test
+      - name: Python wheel + sdist
+        run: python -m build
+      - name: Native binary (linux x86_64, static)
+        run: |
+          make -C native clean
+          make -C native CXXFLAGS="-std=c++17 -O2 -Wall -Wextra -Werror -Iinclude -static"
+          ./native/chalao --version
+          tar -C native -czf dist/chalao-native-${GITHUB_REF_NAME}-linux-x86_64.tar.gz chalao
+      - name: VS Code extension
+        run: cd vscode-extension && npx --yes @vscode/vsce@3.2.1 package -o ../dist/
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes=$(awk -v v="${GITHUB_REF_NAME#v}" '$0 ~ "^## \\[?"v {f=1; next} /^## / && f {exit} f' CHANGELOG.md)
+          gh release create "$GITHUB_REF_NAME" dist/* --title "Robot Chalao $GITHUB_REF_NAME" --notes "$notes"

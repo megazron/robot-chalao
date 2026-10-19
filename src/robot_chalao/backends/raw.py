@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import importlib
 import subprocess
-import time
 
 from robot_chalao.backends.base import Backend
 from robot_chalao.errors import RCBackendError, RCRosMissing
@@ -111,6 +110,38 @@ class RawBackend(Backend):
         import rclpy
         rclpy.spin_once(self._node, timeout_sec=0.0)
         return True
+
+    def diag(self, level, msg=""):
+        """`sehat theek|warning|kharaab "msg"` -> one DiagnosticStatus on
+        /diagnostics, so rqt_robot_monitor and the aggregator see it."""
+        self._ensure()
+        try:
+            from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
+        except Exception as exc:  # noqa: BLE001
+            raise RCRosMissing(msg_hi="diagnostic_msgs nahi mila",
+                               hint_en="install ros-<distro>-diagnostic-msgs. (%s)"
+                                       % exc) from exc
+        levels = {"theek": DiagnosticStatus.OK, "warning": DiagnosticStatus.WARN,
+                  "kharaab": DiagnosticStatus.ERROR}
+        if level not in levels:
+            raise RCBackendError(msg_hi="sehat '%s' samajh nahi aaya" % level,
+                                 hint_en="use theek, warning or kharaab")
+        st = DiagnosticStatus(level=levels[level], name=self._node.get_name(),
+                              message=msg or level)
+        arr = DiagnosticArray(status=[st])
+        arr.header.stamp = self._node.get_clock().now().to_msg()
+        pub = self._pubs.get("/diagnostics")
+        if pub is None:
+            pub = self._node.create_publisher(DiagnosticArray, "/diagnostics", 10)
+            self._pubs["/diagnostics"] = pub
+        pub.publish(arr)
+        return True
+
+    def service_advertise(self, name, fn):
+        raise RCBackendError(
+            msg_hi="'sewa do' sirf --simulate ya zronOS mein chalta hai",
+            hint_en="serving an .rc function as a ROS 2 service is not supported; "
+                    "run it under zronOS")
 
     def call_service(self, name, args):
         """`sewa bulao "service" args` -> a blocking service call. `args` is a

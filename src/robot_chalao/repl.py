@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from .errors import RCError
 from .interpreter import Interpreter
+from .lexer import Lexer
 from .parser import parse
 
 _OPENERS = ("agar", "jab", "har", "kaam", "koshish", "sun", "action")
@@ -30,9 +31,14 @@ _HELP = """Robot Chalao REPL -- kuch hukum:
 """
 
 
+def _head(line):
+    """First word, with short aliases (try, bas, ...) made canonical."""
+    words = line.split("#", 1)[0].split()
+    return Lexer._SHORT.get(words[0], words[0]) if words else ""
+
+
 def _opens_block(line):
-    head = line.strip().split()
-    return bool(head) and head[0] in _OPENERS
+    return _head(line) in _OPENERS
 
 
 def run_repl(simulate=True, config=None):
@@ -46,7 +52,15 @@ def run_repl(simulate=True, config=None):
         prompt = "chalao... " if buffer else "chalao> "
         try:
             line = input(prompt)
-        except (EOFError, KeyboardInterrupt):
+        except KeyboardInterrupt:
+            # Ctrl-C drops a half-typed block; on an empty prompt it quits
+            if buffer:
+                print("\n(block chhod diya)")
+                buffer, depth = [], 0
+                continue
+            print("\nbye!")
+            return 0
+        except EOFError:
             print("\nbye!")
             return 0
         stripped = line.strip()
@@ -62,7 +76,7 @@ def run_repl(simulate=True, config=None):
         buffer.append(line)
         if _opens_block(line):
             depth += 1
-        if stripped == "khatam" and depth > 0:
+        if _head(line) == "khatam" and depth > 0:
             depth -= 1
         if depth > 0:
             continue

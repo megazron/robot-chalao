@@ -35,13 +35,17 @@ def get_backend(name: str) -> Backend:
 
 register("sim", SimBackend)
 
-# Real backends live in sibling modules written by the backends team. Import
-# them best-effort; each registers itself. A missing file must NOT break us.
-for _mod in ("moveit", "nav2", "perception", "raw", "control", "gazebo", "mavros"):
-    try:  # pragma: no cover - depends on which backend files exist
-        __import__("robot_chalao.backends." + _mod)
-    except Exception:  # noqa: BLE001 - absence is expected and fine
-        pass
+# Real backends: module -> class. Their ROS imports are lazy, so importing the
+# module is safe without ROS; calling a method raises RCRosMissing instead.
+_REAL = {
+    "moveit": "MoveItBackend", "nav2": "Nav2Backend",
+    "perception": "PerceptionBackend", "raw": "RawBackend",
+    "control": "ControlBackend", "gazebo": "GazeboBackend",
+    "mavros": "MavrosBackend",
+}
+for _mod, _cls in _REAL.items():
+    _m = __import__("robot_chalao.backends." + _mod, fromlist=[_cls])
+    register(_mod, getattr(_m, _cls))
 
 __all__ = ["BACKENDS", "CAPABILITY", "Backend", "SimBackend",
            "register", "get_backend"]

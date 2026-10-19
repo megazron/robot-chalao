@@ -43,6 +43,15 @@ class RobotConfig:
     backends: dict = field(default_factory=dict)
     raw: dict = field(default_factory=dict)  # everything else, kept as-is
 
+    def as_dict(self) -> dict:
+        """Flat dict for backends: known fields plus the extra yaml keys."""
+        d = {k: getattr(self, k) for k in (
+            "type", "planning_group", "ee_link", "base_link", "gripper",
+            "named_poses", "speed_limit", "workspace", "cameras", "cmd_vel",
+            "backends")}
+        d.update(self.raw)
+        return d
+
     def backend_for(self, capability: str) -> str:
         """Is capability ke liye kaunsa backend? Config -> default."""
         return self.backends.get(capability, DEFAULT_BACKENDS.get(capability, "raw"))

@@ -11,3 +11,4 @@ native/chalao
 native/*.o
 
 .venv/
+*.vsix

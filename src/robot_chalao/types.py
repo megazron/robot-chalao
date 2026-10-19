@@ -99,3 +99,30 @@ class Detection:
     def __repr__(self) -> str:
         return ("Detection(label=%r, %r, confidence=%.2f)"
                 % (self.label, self.pose, self.confidence))
+
+
+def _shortest_g(d: float) -> str:
+    """Shortest %g that round-trips -- the native core's number repr."""
+    s = ""
+    for p in range(1, 18):
+        s = "%.*g" % (p, d)
+        if float(s) == d:
+            break
+    return s
+
+
+def rc_repr(v) -> str:
+    """Value -> text the way the native core prints it (sim lines, lists)."""
+    if isinstance(v, bool):
+        return "True" if v else "False"
+    if v is None:
+        return "None"
+    if isinstance(v, (int, float)):
+        return _shortest_g(float(v))
+    if isinstance(v, str):
+        return "'%s'" % v
+    if isinstance(v, (list, tuple)):
+        return "[%s]" % ", ".join(rc_repr(x) for x in v)
+    if isinstance(v, dict):
+        return "{%s}" % ", ".join("'%s': %s" % (k, rc_repr(x)) for k, x in v.items())
+    return repr(v)

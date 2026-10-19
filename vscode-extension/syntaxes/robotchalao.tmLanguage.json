@@ -3,14 +3,30 @@
   "name": "Robot Chalao",
   "scopeName": "source.robotchalao",
   "patterns": [
-    { "include": "#comments" },
-    { "include": "#strings" },
-    { "include": "#numbers" },
-    { "include": "#control" },
-    { "include": "#robotverbs" },
-    { "include": "#constants" },
-    { "include": "#types" },
-    { "include": "#operators" }
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#control"
+    },
+    {
+      "include": "#robotverbs"
+    },
+    {
+      "include": "#constants"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#operators"
+    }
   ],
   "repository": {
     "comments": {
@@ -22,15 +38,18 @@
       "begin": "\"",
       "end": "\"",
       "patterns": [
-        { "match": "\\\\.", "name": "constant.character.escape.robotchalao" }
+        {
+          "match": "\\\\.",
+          "name": "constant.character.escape.robotchalao"
+        }
       ]
     },
     "numbers": {
-      "match": "\\b-?[0-9]+(\\.[0-9]+)?\\b",
+      "match": "\\b[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?\\b",
       "name": "constant.numeric.robotchalao"
     },
     "control": {
-      "match": "\\b(maano|agar|toh|warna|khatam|jab|tak|karo|har|mein|kaam|wapas|dikhao|koshish|galti|hone|par|import|ruko_loop)\\b",
+      "match": "\\b(maano|rakh|agar|toh|warna|khatam|bas|jab|tak|karo|har|mein|kaam|wapas|de|dikhao|bol|koshish|try|galti|hone|par|import|ruko_loop|tod)\\b",
       "name": "keyword.control.robotchalao"
     },
     "constants": {
@@ -42,7 +61,7 @@
       "name": "entity.name.type.robotchalao"
     },
     "robotverbs": {
-      "match": "\\b(robot|jodo|chhodo|namespace|param|ghar|jao|seedha|pakdo|speed|planner|rukawat|attach|detach|kahan|hai|kya|IK|FK|nikalo|named|aage|peeche|chalo|ghumo|speed_move|ruk|map|load|localize|yahan|waypoints|follow|banao|save|obstacle|nazdeek|camera|dekho|photo|lo|object|dhundo|lidar|depth|imu|dabav|padho|battery|kitni|AprilTag|ArUco|TF|pucho|se|sun|bolo|sewa|bulao|action|bhejo|progress|nodes|topics|record|shuru|band|launch|urdf|joint|ko|pe|le|controller|switch|torque|on|off|simulation|gazebo|spawn|rviz|kholo|workspace|limit|deadline|udaan|bharo|utro|height|meter|degree|rad|second|minute|ms|set|get)\\b",
+      "match": "\\b(robot|jodo|chhodo|namespace|param|ghar|jao|seedha|pakdo|speed|planner|rukawat|attach|detach|kahan|hai|kya|IK|FK|nikalo|named|aage|peeche|chalo|ghumo|speed_move|ruk|map|load|localize|yahan|waypoints|follow|banao|save|obstacle|nazdeek|camera|dekho|photo|lo|object|dhundo|lidar|depth|imu|dabav|padho|battery|kitni|AprilTag|ArUco|TF|pucho|se|sun|bolo|sewa|bulao|action|bhejo|progress|nodes|topics|record|shuru|band|launch|urdf|joint|ko|pe|le|controller|switch|torque|on|off|simulation|gazebo|spawn|rviz|kholo|workspace|limit|deadline|udaan|bharo|utro|height|meter|degree|rad|second|minute|ms|set|get|frame|sehat|theek|warning|kharaab|do)\\b",
       "name": "support.function.robotchalao"
     },
     "operators": {
