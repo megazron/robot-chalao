@@ -174,6 +174,15 @@ class Lexer:
                 buf.append(self._advance())
             else:
                 break
+        # scientific notation: e/E [+|-] digits  (2.25e-05, 1E6)
+        if self._peek() in ("e", "E") and (
+                self._peek(1).isdigit()
+                or (self._peek(1) in ("+", "-") and self._peek(2).isdigit())):
+            buf.append(self._advance())
+            if self._peek() in ("+", "-"):
+                buf.append(self._advance())
+            while self._peek().isdigit():
+                buf.append(self._advance())
         return Token(TokenType.NUMBER, "".join(buf), line, col)
 
     # Short aliases -> canonical keyword. Aliases only: full Hinglish still

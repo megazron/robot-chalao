@@ -13,12 +13,10 @@ from __future__ import annotations
 import os
 import time
 
-from . import ast_nodes as A
 from .backends import CAPABILITY, get_backend
 from .backends.sim import SimBackend
-from .config import RobotConfig
 from .errors import RCError, RCNameError, RCRuntimeError, RCTypeError
-from .types import Joints, Pose, Twist
+from .types import Joints, Pose, Twist, rc_repr
 
 # how many times a `har N second mein` timer fires in simulate (so it ends)
 SIM_TIMER_TICKS = 3
@@ -75,6 +73,7 @@ class RobotContext:
         self.simulate = simulate
         self._sim = SimBackend() if simulate else None
         self._cache = {}
+        self._robot = None   # robot name once connected
 
     def backend(self, capability):
         if self.simulate:
@@ -82,8 +81,39 @@ class RobotContext:
         bname = (self.config.backend_for(capability)
                  if self.config else "raw")
         if bname not in self._cache:
-            self._cache[bname] = get_backend(bname)
+            b = get_backend(bname)
+            # every real backend owns its own node/clients, so each one
+            # connects the first time a command needs it
+            if self._robot is not None:
+                b.connect(self._robot, self._cfg_dict())
+            self._cache[bname] = b
         return self._cache[bname]
+
+    def _cfg_dict(self):
+        return self.config.as_dict() if self.config else {}
+
+    def connect(self, robot):
+        self._robot = robot
+        if self.simulate:
+            self._sim.connect(robot, self._cfg_dict())
+        else:
+            self.backend("connection")
+
+    def disconnect(self):
+        """Disconnect every backend; the first failure is re-raised."""
+        if self.simulate:
+            self._sim.disconnect()
+            return
+        first = None
+        for b in self._cache.values():
+            try:
+                b.disconnect()
+            except Exception as exc:  # noqa: BLE001
+                first = first or exc
+        self._cache.clear()
+        self._robot = None
+        if first is not None:
+            raise first
 
 
 class Interpreter:
@@ -103,6 +133,22 @@ class Interpreter:
     # ------------------------------------------------------------- run
     def run(self, program):
         self.exec_block(program.body, self.globals)
+
+    def close(self):
+        """Disconnect every real robot the program left connected (stops
+        bases, frees ROS nodes). Simulated robots need no cleanup."""
+        first = None
+        for ctx in list(self.robots.values()):
+            if ctx.simulate:
+                continue
+            try:
+                ctx.disconnect()
+            except Exception as exc:  # noqa: BLE001
+                first = first or exc
+        self.robots.clear()
+        self.current = None
+        if first is not None:
+            raise first
 
     def exec_block(self, stmts, env):
         for st in stmts:
@@ -168,7 +214,7 @@ class Interpreter:
             it = iter(seq)
         except TypeError:
             raise RCTypeError(msg_hi="is cheez par 'har' nahi chal sakta",
-                              hint_en="value is not iterable", line=node.line)
+                              hint_en="value is not iterable", line=node.line) from None
         for item in it:
             child = Env(env)
             child.set(node.var, item)
@@ -287,7 +333,13 @@ class Interpreter:
         if fn is None:
             raise RCRuntimeError(msg_hi="anjaan hukum '%s'" % method,
                                  hint_en="unknown command", line=line)
-        return fn(**kwargs)
+        try:
+            return fn(**kwargs)
+        except RCError as e:
+            # backends don't know the source line; the command does
+            if e.line is None:
+                e.line = line
+            raise
 
     def _connect(self, name, selector, line):
         key = selector or name
@@ -298,7 +350,7 @@ class Interpreter:
                 hint_en="add %r to chalao.yaml, or run with --simulate" % name,
                 line=line)
         ctx = RobotContext(key, cfg, self.simulate)
-        ctx.backend("connection").connect(name, cfg)
+        ctx.connect(name)
         self.robots[key] = ctx
         if selector is None:
             self.current = ctx
@@ -306,7 +358,7 @@ class Interpreter:
 
     def _disconnect(self, selector, line):
         ctx = self._ctx(selector, line)
-        ctx.backend("connection").disconnect()
+        ctx.disconnect()
         key = selector or (ctx.name if ctx else None)
         self.robots.pop(key, None)
         if ctx is self.current:
@@ -397,7 +449,7 @@ class Interpreter:
             raise
         except Exception as e:  # noqa: BLE001
             raise RCTypeError(msg_hi="in do cheezon par '%s' nahi chalta" % op,
-                              hint_en=str(e), line=node.line)
+                              hint_en=str(e), line=node.line) from e
         raise RCRuntimeError(msg_hi="anjaan operator '%s'" % op,
                              hint_en="unknown operator", line=node.line)
 
@@ -472,6 +524,8 @@ def _fmt(v):
         return str(int(v))
     if v is None:
         return "kuch nahi"
+    if isinstance(v, (list, tuple, dict)):
+        return rc_repr(v)
     return str(v)
 
 

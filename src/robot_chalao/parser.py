@@ -24,7 +24,7 @@ _DIST_UNITS = {"meter", "meters", "metre", "cm", "mm"}
 # (queries that return a value, e.g. `maano p = kahan hai`)
 _QUERY_LEAD = {"kahan", "joints", "battery", "TF", "object", "IK", "FK",
                "camera", "lidar", "depth", "imu", "dabav", "obstacle",
-               "AprilTag", "ArUco", "param"}
+               "AprilTag", "ArUco", "param", "sewa"}
 
 
 class Parser:
@@ -555,6 +555,23 @@ class Parser:
             to = self._S(self.eat_string(), line)
             return cmd("tf", from_frame=frm, to_frame=to)
 
+        # frame "child" "parent" (x, y, z, roll, pitch, yaw)
+        if w == "frame":
+            self.eat()
+            child = self._S(self.eat_string(), line)
+            parent = self._S(self.eat_string(), line)
+            x, y, z, r, p, yw = self._tuple(6)
+            return cmd("tf_set", child=child, parent=parent,
+                       x=x, y=y, z=z, roll=r, pitch=p, yaw=yw)
+
+        # sehat theek | sehat warning "msg" | sehat kharaab "msg"
+        if w == "sehat":
+            self.eat()
+            level = self._S(self.eat_ident(), line)
+            msg = self._S(self.eat_string() if self.cur().type == TokenType.STRING
+                          else "", line)
+            return cmd("diag", level=level, msg=msg)
+
         # ---- raw ROS 2 ----
         if w == "bolo":
             self.eat()
@@ -562,6 +579,12 @@ class Parser:
             return cmd("publish", topic=topic, value=self.expression())
         if w == "sewa":
             self.eat()
+            if self.is_kw("do"):
+                # sewa do "name" fn -- advertise a function as a service
+                self.eat()
+                name = self._S(self.eat_string(), line)
+                return cmd("service_advertise", name=name,
+                           fn=self._S(self.eat_ident(), line))
             self.eat_kw("bulao")
             name = self._S(self.eat_string(), line)
             if self.cur().type in (TokenType.NEWLINE, TokenType.EOF):
@@ -787,7 +810,8 @@ class Parser:
             return self._postfix(A.Ident(name=w, line=line))
 
         raise RCParseError(msg_hi="yeh samajh nahi aaya",
-                           hint_en="unexpected token %r" % t.value, line=line)
+                           hint_en="unexpected end of line" if t.type == TokenType.NEWLINE
+                           else "unexpected token %r" % t.value, line=line)
 
     def _postfix(self, node):
         while self.is_op("."):

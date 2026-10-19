@@ -1,1 +1,2 @@
-__version__ = "0.1.0"
+"""Robot Chalao: a Hinglish programming language for ROS 2 robots."""
+__version__ = "1.0.0"

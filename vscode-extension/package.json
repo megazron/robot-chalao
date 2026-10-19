@@ -2,17 +2,28 @@
   "name": "robot-chalao",
   "displayName": "Robot Chalao",
   "description": "Syntax highlighting and snippets for the Robot Chalao Hinglish robot language (.rc).",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "publisher": "megazron",
   "license": "MIT",
-  "engines": { "vscode": "^1.75.0" },
-  "categories": ["Programming Languages", "Snippets"],
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
   "contributes": {
     "languages": [
       {
         "id": "robotchalao",
-        "aliases": ["Robot Chalao", "robotchalao", "rc"],
-        "extensions": [".rc"],
+        "aliases": [
+          "Robot Chalao",
+          "robotchalao",
+          "rc"
+        ],
+        "extensions": [
+          ".rc"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -29,5 +40,20 @@
         "path": "./snippets/robotchalao.json"
       }
     ]
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/megazron/robot-chalao"
+  },
+  "homepage": "https://github.com/megazron/robot-chalao#readme",
+  "bugs": {
+    "url": "https://github.com/megazron/robot-chalao/issues"
+  },
+  "keywords": [
+    "robotics",
+    "ros2",
+    "hinglish",
+    "robot-chalao",
+    "rc"
+  ]
 }

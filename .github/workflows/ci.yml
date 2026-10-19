@@ -1,16 +1,66 @@
 name: ci
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+
 jobs:
-  test:
+  python:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install pyyaml pytest
-      - run: PYTHONPATH=src python -m pytest -q
-      - run: PYTHONPATH=src python -m robot_chalao.cli run examples/01_arm_pick_place.rc --simulate --config examples/chalao.yaml
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests
+      - run: python -m pytest -q
+      - name: Every example runs in --simulate
+        run: for f in examples/*.rc; do chalao run "$f" --simulate --config examples/chalao.yaml > /dev/null || exit 1; done
+      - name: Scaffold and run a new project
+        run: chalao init /tmp/proj && cd /tmp/proj && chalao check main.rc && chalao run main.rc --simulate
+
+  native:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make -C native test
+      - name: AddressSanitizer + UBSan
+        run: make -C native san && bash native/tests/run_tests.sh
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Native and Python cores print identical output
+        run: |
+          make -C native clean && make -C native
+          pip install -e ".[dev]"
+          python -m pytest -q tests/test_parity.py
+
+  ros-live:
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ROS message packages
+        run: |
+          apt-get update
+          apt-get install -y python3-pytest python3-yaml \
+            ros-jazzy-diagnostic-msgs ros-jazzy-tf2-ros-py ros-jazzy-geometry-msgs
+      - name: Real run against live ROS 2
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          export ROS_DOMAIN_ID=17
+          PYTHONPATH=src:$PYTHONPATH python3 -m pytest -q -p no:launch_testing tests/test_ros_live.py
+
+  vscode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: cd vscode-extension && npx --yes @vscode/vsce@3.2.1 package

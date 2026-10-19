@@ -12,7 +12,6 @@ ROS bodies for common methods.)
 """
 from __future__ import annotations
 
-from . import ast_nodes as A
 
 _HEADER = '''"""Auto-generated from a Robot Chalao (.rc) program.
 

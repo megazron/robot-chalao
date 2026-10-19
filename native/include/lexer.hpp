@@ -84,15 +84,21 @@ private:
             else if (ch == '.' && !dot && std::isdigit((unsigned char)peek(1))) { dot = true; buf += advance(); }
             else break;
         }
+        // scientific notation: e/E [ + | - ] digits  (e.g. 2.25e-05, 1E6)
+        if ((peek() == 'e' || peek() == 'E') &&
+            (std::isdigit((unsigned char)peek(1)) ||
+             ((peek(1) == '+' || peek(1) == '-') && std::isdigit((unsigned char)peek(2))))) {
+            buf += advance();                       // e / E
+            if (peek() == '+' || peek() == '-') buf += advance();
+            while (std::isdigit((unsigned char)peek())) buf += advance();
+        }
         return {TT::Number, buf, l, c};
     }
     // Short aliases -> canonical keyword. These are aliases: the whole language
-    // still works in full Hinglish, but you can type the common ones short, e.g.
-    //   bas   ->  khatam    (end a block)
-    //   bol   ->  dikhao    (print)
-    //   rakh  ->  maano     (variable)
-    // Applied at the identifier level so every rule and multi-word phrase just
-    // works, and native + Python stay byte-identical.
+    // still works in full Hinglish, but the common keywords can be typed short
+    // (bas -> khatam, bol -> dikhao, rakh -> maano). Applied at the identifier
+    // level so every rule and multi-word phrase just works, and native + Python
+    // stay byte-identical.
     static const std::string& canonShort(const std::string& w) {
         static const std::unordered_map<std::string, std::string> m = {
             {"bas","khatam"}, {"bol","dikhao"}, {"rakh","maano"},

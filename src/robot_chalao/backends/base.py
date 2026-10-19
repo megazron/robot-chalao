@@ -36,12 +36,12 @@ CAPABILITY = {
     "read_depth": "perception", "read_imu": "perception",
     "read_ft": "perception", "battery": "perception",
     "find_apriltag": "perception", "find_aruco": "perception",
-    "tf": "perception",
+    "tf": "perception", "tf_set": "perception",
     # raw
     "subscribe": "raw", "publish": "raw", "call_service": "raw",
     "send_action": "raw", "list_nodes": "raw", "list_topics": "raw",
     "record_start": "raw", "record_stop": "raw", "launch": "raw",
-    "urdf_load": "raw",
+    "urdf_load": "raw", "diag": "raw", "service_advertise": "raw",
     # control
     "joint_to": "control", "controller_switch": "control", "torque": "control",
     # sim
@@ -197,6 +197,15 @@ class Backend:
         self._no("tf")
 
     # raw
+    def tf_set(self, child, parent, x, y, z, roll, pitch, yaw):
+        self._no("tf_set")
+
+    def diag(self, level, msg=""):
+        self._no("diag")
+
+    def service_advertise(self, name, fn):
+        self._no("service_advertise")
+
     def subscribe(self, topic, type_name, callback):
         self._no("subscribe")
 

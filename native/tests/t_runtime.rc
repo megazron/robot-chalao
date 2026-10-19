@@ -1,0 +1,15 @@
+# runtime commands shared with zronOS: frame, sehat, sewa do / sewa as a value
+maano tiny = 2.25e-05
+maano big = 1E6
+dikhao tiny * 1000
+dikhao big + 1
+dikhao 3e2 + 1.5e+1
+frame "arm" "base" (0, 0, 0.5, 0, 0, 1.5708)
+sehat theek
+sehat warning "battery kam hai"
+kaam double(x)
+  wapas x * 2
+khatam
+sewa do "double" double
+maano r = sewa bulao "double" 21
+dikhao r

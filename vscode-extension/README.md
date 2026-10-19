@@ -8,13 +8,22 @@ robot language (`.rc` files).
 - Auto-closing brackets and quotes, `#` line comments.
 - Snippets: `agar`, `jabtak`, `har`, `kaam`, `koshish`, `timer`, `jodo`, `jaopose`,
   `seedha`, `aage`, `yahan`, `dhundo`, `sun`.
+- Short aliases (`bas`, `bol`, `rakh`, `try`, `de`, `tod`) and scientific-notation numbers highlight like the full keywords.
 
-## Install (from source)
+## Install
+
+Download `robot-chalao-<version>.vsix` from the [latest release](https://github.com/megazron/robot-chalao/releases/latest), then:
+
+```bash
+code --install-extension robot-chalao-1.0.0.vsix
+```
+
+## Build from source
 ```bash
 cd vscode-extension
 npm install -g @vscode/vsce   # once
-vsce package                  # makes robot-chalao-0.1.0.vsix
-code --install-extension robot-chalao-0.1.0.vsix
+vsce package                  # makes robot-chalao-1.0.0.vsix
+code --install-extension robot-chalao-1.0.0.vsix
 ```
 Or copy this folder into `~/.vscode/extensions/robot-chalao/` and reload VS Code.
 

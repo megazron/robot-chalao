@@ -9,7 +9,7 @@ plausible stub, so a `.rc` file runs with zero ROS installed.)
 """
 from __future__ import annotations
 
-from ..types import Detection, Image, Joints, PointCloud, Pose, Twist
+from ..types import Detection, Image, Joints, PointCloud, Pose, Twist, rc_repr
 from .base import Backend
 
 
@@ -39,7 +39,7 @@ class SimBackend(Backend):
         _say("namespace set: %s" % ns)
 
     def param_set(self, key, value):
-        _say("param set: %s = %r" % (key, value))
+        _say("param set: %s = %s" % (key, rc_repr(value)))
 
     def param_get(self, key):
         _say("param get: %s" % key)
@@ -50,12 +50,12 @@ class SimBackend(Backend):
         _say("arm ghar (home) ja raha hai")
 
     def arm_pose(self, pose):
-        _say("pose pe ja raha hai: %r" % pose)
+        _say("pose pe ja raha hai: %s" % (rc_repr(pose),))
         if isinstance(pose, Pose):
             self._pose = pose
 
     def arm_joints(self, joints):
-        _say("joints pe ja raha hai: %r" % joints)
+        _say("joints pe ja raha hai: %s" % (rc_repr(joints),))
         if isinstance(joints, Joints):
             self._joints = joints
 
@@ -77,7 +77,7 @@ class SimBackend(Backend):
         _say("planner set: %s" % planner)
 
     def add_obstacle(self, name, pose, size):
-        _say("rukawat '%s' jodi at %r size %r" % (name, pose, size))
+        _say("rukawat '%s' jodi at %s size %s" % (name, rc_repr(pose), rc_repr(size)))
 
     def remove_obstacle(self, name):
         _say("rukawat '%s' hatai" % name)
@@ -89,19 +89,19 @@ class SimBackend(Backend):
         _say("'%s' detach kiya" % name)
 
     def get_pose(self):
-        _say("abhi yahan hai: %r" % self._pose)
+        _say("abhi yahan hai: %s" % (rc_repr(self._pose),))
         return self._pose
 
     def get_joints(self):
-        _say("joints abhi: %r" % self._joints)
+        _say("joints abhi: %s" % (rc_repr(self._joints),))
         return self._joints
 
     def ik(self, pose):
-        _say("IK nikala for %r" % pose)
+        _say("IK nikala for %s" % (rc_repr(pose),))
         return self._joints
 
     def fk(self, joints):
-        _say("FK nikala for %r" % joints)
+        _say("FK nikala for %s" % (rc_repr(joints),))
         return self._pose
 
     # base
@@ -123,7 +123,7 @@ class SimBackend(Backend):
         _say("map load: %s" % path)
 
     def localize(self, pose=None):
-        _say("localize" + (" at %r" % pose if pose else ""))
+        _say("localize" + (" at %s" % rc_repr(pose) if pose else ""))
 
     def nav_to(self, x, y, theta):
         _say("nav: (%.2f, %.2f, theta=%.2f) pe ja raha hai" % (x, y, theta))
@@ -185,6 +185,15 @@ class SimBackend(Backend):
         _say("TF %s -> %s" % (from_frame, to_frame))
         return Pose(0.1, 0.0, 0.5)
 
+    def tf_set(self, child, parent, x, y, z, roll, pitch, yaw):
+        _say("frame '%s' <- '%s' set" % (child, parent))
+
+    def diag(self, level, msg=""):
+        _say("sehat: %s%s" % (level, " -- " + msg if msg else ""))
+
+    def service_advertise(self, name, fn):
+        _say("sewa di: '%s' -> %s" % (name, fn))
+
     # raw
     def subscribe(self, topic, type_name, callback):
         _say("sun raha hai %s (%s)" % (topic, type_name))
@@ -192,14 +201,14 @@ class SimBackend(Backend):
         callback({"topic": topic, "type": type_name, "data": None})
 
     def publish(self, topic, value, type_name=None):
-        _say("bola %s <- %r" % (topic, value))
+        _say("bola %s <- %s" % (topic, rc_repr(value)))
 
     def call_service(self, name, args):
-        _say("sewa bulai %s args=%r" % (name, args))
+        _say("sewa bulai %s args=%s" % (name, rc_repr(args)))
         return {"success": True}
 
     def send_action(self, name, goal, progress_cb=None):
-        _say("action bheja %s goal=%r" % (name, goal))
+        _say("action bheja %s goal=%s" % (name, rc_repr(goal)))
         if progress_cb:
             for pct in (25, 50, 75, 100):
                 progress_cb({"progress": pct})
@@ -253,7 +262,7 @@ class SimBackend(Backend):
         _say("!! BAND KARO -- sab kuch ruk gaya (e-stop) !!")
 
     def set_workspace_limit(self, bounds):
-        _say("workspace limit set: %r" % (list(bounds),))
+        _say("workspace limit set: %s" % (rc_repr(list(bounds)),))
 
     def set_speed_limit(self, v):
         _say("speed limit set: %.2f" % v)

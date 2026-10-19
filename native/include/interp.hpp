@@ -50,9 +50,20 @@ public:
     std::string baseDir;
     explicit Interpreter(bool sim = true) : simulate(sim) {}
     void run(const NodePtr& program) { execBlock(program->kids, globals); }
+    // Cross-service RPC: invoke a top-level function by name with args.
+    // Returns false if no such function; used by zronOS `sewa bulao`.
+    bool callFunction(const std::string& fn, std::vector<Value>& args, Value& out) {
+        if (funcs.find(fn) == funcs.end()) return false;
+        out = callUser(fn, args, 0);
+        return true;
+    }
+    // --- zronOS integration hooks (null by default -> standalone [nakli] behaviour) ---
+    std::function<void(const std::string&)> outSink;   // capture all program output (dikhao / [nakli] / ruko)
+    std::function<bool(const std::string&, std::map<std::string,Value>&, Value&)> robotHook;  // intercept robot commands
 
 private:
-    static void say(const std::string& m) { std::cout << "[nakli] " << m << "\n"; }
+    void emit(const std::string& s) { if (outSink) outSink(s); else std::cout << s << "\n"; }
+    void say(const std::string& m) { emit("[nakli] " + m); }
     static std::string fmtf(const char* f, double a){ char b[128]; std::snprintf(b,sizeof b,f,a); return b; }
 
     void execBlock(const std::vector<NodePtr>& body, const EnvPtr& env) { for (auto& st : body) execStmt(st, env); }
@@ -60,14 +71,12 @@ private:
     void doImport(const NodePtr& n) {
         std::string path = n->s;
         if (!path.empty() && path[0] != '/' && !baseDir.empty()) path = baseDir + "/" + path;
-        // canonical-ish key to avoid re-importing the same file
         if (imported_.count(path)) return;
         std::ifstream f(path);
         if (!f) throw RCError("import nahi mila: " + n->s, "file not found for import", n->line);
         imported_.insert(path);
         std::stringstream ss; ss << f.rdbuf();
         NodePtr prog = parseSource(ss.str());
-        // nested imports resolve relative to the imported file's own directory
         std::string prevBase = baseDir;
         auto slash = path.find_last_of('/');
         baseDir = (slash == std::string::npos) ? std::string(".") : path.substr(0, slash);
@@ -80,7 +89,7 @@ private:
             case NT::Let: env->assign(n->s, eval(n->a, env)); return;
             case NT::Print: {
                 std::string out; for (size_t i=0;i<n->kids.size();++i){ if(i) out+=" "; out += fmtValue(eval(n->kids[i], env)); }
-                std::cout << out << "\n"; return;
+                emit(out); return;
             }
             case NT::ExprStmt: eval(n->a, env); return;
             case NT::Return: throw ReturnEx{ n->a ? eval(n->a, env) : Value::Nil() };
@@ -221,8 +230,8 @@ private:
     Value call(const NodePtr& n, const EnvPtr& env) {
         const std::string& name = n->s;
         std::vector<Value> args; for (auto& k : n->kids) args.push_back(eval(k, env));
-        if (name == "_ruko") { double s = args.empty()?0.0:args[0].num; std::cout << "[nakli] ruk raha hoon " << fmtf("%.2f", s) << " second\n"; return Value::Nil(); }
-        if (name == "_deadline") { double s = args.empty()?0.0:args[0].num; std::cout << "[nakli] deadline " << fmtf("%.2f", s) << " second\n"; return Value::Nil(); }
+        if (name == "_ruko") { double s = args.empty()?0.0:args[0].num; emit("[nakli] ruk raha hoon " + fmtf("%.2f", s) + " second"); return Value::Nil(); }
+        if (name == "_deadline") { double s = args.empty()?0.0:args[0].num; emit("[nakli] deadline " + fmtf("%.2f", s) + " second"); return Value::Nil(); }
         // builtins
         if (name=="len") { double L=0; if(!args.empty()){ auto&x=args[0]; L = x.t==VT::List?x.list->size(): x.t==VT::Str?x.str.size(): x.t==VT::Dict?x.dict->size():0; } return Value::Num_(L); }
         if (name=="range") { Value v=Value::List_(); long a0=0,a1=0,st=1; if(args.size()==1){a1=(long)args[0].num;} else if(args.size()>=2){a0=(long)args[0].num;a1=(long)args[1].num; if(args.size()>=3) st=(long)args[2].num;} if(st!=0) for(long i=a0; (st>0)?(i<a1):(i>a1); i+=st) v.list->push_back(Value::Num_(i)); return v; }
@@ -257,6 +266,8 @@ private:
         auto N = [&](const char* k){ auto it=A.find(k); return it!=A.end()?it->second.num:0.0; };
         auto V = [&](const char* k){ auto it=A.find(k); return it!=A.end()?it->second:Value::Nil(); };
         auto B = [&](const char* k){ auto it=A.find(k); return it!=A.end()&&truthy(it->second); };
+        (void)S;(void)N;(void)V;(void)B;
+        if (robotHook) { Value out; if (robotHook(m, A, out)) return out; }
 
         if (m=="connect")    { say("robot '" + S("name") + "' se jud gaye"); return Value::Nil(); }
         if (m=="disconnect") { say("robot chhod diya"); return Value::Nil(); }
@@ -267,7 +278,7 @@ private:
         if (m=="arm_home")   { say("arm ghar (home) ja raha hai"); return Value::Nil(); }
         if (m=="arm_pose")   { Value p=V("pose"); say("pose pe ja raha hai: " + reprValue(p)); if(p.t==VT::Object && p.obj->type=="Pose") simPose=p; return Value::Nil(); }
         if (m=="arm_joints") { Value j=V("joints"); say("joints pe ja raha hai: " + reprValue(j)); if(j.t==VT::Object && j.obj->type=="Joints") simJoints=j; return Value::Nil(); }
-        if (m=="arm_cartesian"){ std::cout<<"[nakli] seedha (Cartesian) ja raha hai: ("<<fmtf("%.3f",N("x"))<<", "<<fmtf("%.3f",N("y"))<<", "<<fmtf("%.3f",N("z"))<<")\n"; return Value::Nil(); }
+        if (m=="arm_cartesian"){ emit("[nakli] seedha (Cartesian) ja raha hai: (" + fmtf("%.3f",N("x")) + ", " + fmtf("%.3f",N("y")) + ", " + fmtf("%.3f",N("z")) + ")"); return Value::Nil(); }
         if (m=="arm_named")  { say("named pose '" + S("name") + "' pe ja raha hai"); return Value::Nil(); }
         if (m=="gripper")    { say(std::string("gripper ") + (B("close") ? "band (pakad raha hai)" : "khol raha hai")); return Value::Nil(); }
         if (m=="set_speed")  { say("speed set: " + fmtf("%.2f", N("scale"))); return Value::Nil(); }
@@ -287,7 +298,7 @@ private:
         if (m=="base_stop")  { say("base ruk gaya"); return Value::Nil(); }
         if (m=="map_load")   { say("map load: " + S("path")); return Value::Nil(); }
         if (m=="localize")   { auto it=A.find("pose"); say(std::string("localize") + (it!=A.end()? (" at " + reprValue(it->second)) : "")); return Value::Nil(); }
-        if (m=="nav_to")     { std::cout<<"[nakli] nav: ("<<fmtf("%.2f",N("x"))<<", "<<fmtf("%.2f",N("y"))<<", theta="<<fmtf("%.2f",N("theta"))<<") pe ja raha hai\n"; return Value::Nil(); }
+        if (m=="nav_to")     { emit("[nakli] nav: (" + fmtf("%.2f",N("x")) + ", " + fmtf("%.2f",N("y")) + ", theta=" + fmtf("%.2f",N("theta")) + ") pe ja raha hai"); return Value::Nil(); }
         if (m=="follow_waypoints"){ Value p=V("points"); int c = p.t==VT::List? (int)p.list->size():0; say("waypoints follow: " + std::to_string(c) + " points"); return Value::Nil(); }
         if (m=="slam_start") { say("SLAM shuru -- map banaya ja raha hai"); return Value::Nil(); }
         if (m=="map_save")   { say("map save: " + S("name")); return Value::Nil(); }
@@ -319,7 +330,7 @@ private:
         if (m=="torque")     { say(std::string("torque ") + (B("on")?"on":"off")); return Value::Nil(); }
         // simulation
         if (m=="sim_start")  { say("Gazebo shuru: world '" + S("world") + "'"); return Value::Nil(); }
-        if (m=="spawn")      { std::cout<<"[nakli] spawn '"<<S("model")<<"' at ("<<fmtf("%.2f",N("x"))<<", "<<fmtf("%.2f",N("y"))<<", "<<fmtf("%.2f",N("z"))<<")\n"; return Value::Nil(); }
+        if (m=="spawn")      { emit("[nakli] spawn '" + S("model") + "' at (" + fmtf("%.2f",N("x")) + ", " + fmtf("%.2f",N("y")) + ", " + fmtf("%.2f",N("z")) + ")"); return Value::Nil(); }
         if (m=="sim_stop")   { say("simulation band"); return Value::Nil(); }
         if (m=="rviz_open")  { say("RViz khol diya"); return Value::Nil(); }
         // safety
@@ -330,6 +341,11 @@ private:
         if (m=="takeoff")    { say("udaan bhari -- drone upar"); return Value::Nil(); }
         if (m=="land")       { say("utar raha hai (land)"); return Value::Nil(); }
         if (m=="set_height") { say("height " + fmtf("%.2f", N("h")) + " " + S("unit") + " pe ja raha hai"); return Value::Nil(); }
+
+        // zronOS runtime commands (standalone [nakli] fallbacks)
+        if (m=="tf_set")    { say("frame '"+S("child")+"' <- '"+S("parent")+"' set"); return Value::Nil(); }
+        if (m=="service_advertise"){ say("sewa di: '"+S("name")+"' -> "+S("fn")); return Value::Nil(); }
+        if (m=="diag")      { std::string lv=S("level"); std::string ms=S("msg"); say(std::string("sehat: ")+lv+(ms.empty()?"":(" -- "+ms))); return Value::Nil(); }
 
         throw RCError("anjaan hukum '" + m + "'", "unknown command", n->line);
     }

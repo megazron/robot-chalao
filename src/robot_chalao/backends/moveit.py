@@ -34,6 +34,48 @@ def _need():
                     "or run with --simulate. (%s)" % exc) from exc
 
 
+# moveit_py (Jazzy) segfaults when a MoveItPy object is garbage-collected,
+# even after shutdown(). Retired handles are parked here for the life of the
+# process, and the CLI leaves with os._exit() once any were started.
+RETIRED = []
+
+
+def _moveit_config_dict(cfg, pkg, name):
+    """chalao.yaml moveit_* keys -> a MoveItPy config_dict.
+
+    moveit_config_package: the robot's *_moveit_config package
+    moveit_robot_name:     robot name inside it (default: the chalao name)
+    moveit_mappings:       xacro arguments for the URDF (e.g. use_fake_hardware)
+    """
+    import os
+
+    from ament_index_python.packages import get_package_share_directory
+    from moveit_configs_utils import MoveItConfigsBuilder
+    b = MoveItConfigsBuilder(cfg.get("moveit_robot_name", name), package_name=pkg)
+    mappings = {k: str(v).lower() if isinstance(v, bool) else str(v)
+                for k, v in (cfg.get("moveit_mappings") or {}).items()}
+    b = b.robot_description(mappings=mappings or None)
+    share = get_package_share_directory(pkg)
+    if os.path.exists(os.path.join(share, "config", "moveit_controllers.yaml")):
+        b = b.trajectory_execution(file_path="config/moveit_controllers.yaml")
+    b = b.planning_pipelines(pipelines=["ompl"])
+    d = b.to_moveit_configs().to_dict()
+    # MoveItPy (moveit_cpp) wants pipeline names under planning_pipelines,
+    # where move_group takes a bare list
+    pipes = d.get("planning_pipelines") or ["ompl"]
+    if isinstance(pipes, list):
+        d["planning_pipelines"] = {"pipeline_names": pipes}
+    d.setdefault("plan_request_params", {
+        "planning_attempts": 1, "planning_pipeline": "ompl",
+        "max_velocity_scaling_factor": 1.0, "max_acceleration_scaling_factor": 1.0})
+    return d
+
+
+def _succeeded(status):
+    """ExecutionStatus -> bool (its .status is e.g. "SUCCEEDED", "ABORTED")."""
+    return str(getattr(status, "status", status)).upper() == "SUCCEEDED"
+
+
 class MoveItBackend(Backend):
     """Arm control through MoveIt 2. Only the [arm] capability is implemented;
     every other capability inherits the base RCBackendError."""
@@ -70,16 +112,37 @@ class MoveItBackend(Backend):
 
         if not rclpy.ok():
             rclpy.init()
-        self._moveit = MoveItPy(node_name="robot_chalao_%s" % name)
-        self._arm = self._moveit.get_planning_component(self._group)
-        self._node = self._moveit.get_node()
+        kwargs = {"node_name": "robot_chalao_%s" % name}
+        pkg = self._cfg.get("moveit_config_package")
+        try:
+            if pkg:
+                # build the full MoveIt config (URDF, SRDF, kinematics, planners)
+                # from the robot's *_moveit_config package
+                kwargs["config_dict"] = _moveit_config_dict(self._cfg, pkg, name)
+            self._moveit = MoveItPy(**kwargs)
+            RETIRED.append((self._moveit, None))   # never collect, see RETIRED
+            self._arm = self._moveit.get_planning_component(self._group)
+        except Exception as exc:  # noqa: BLE001
+            self._moveit = self._arm = None
+            raise RCRosMissing(
+                msg_hi="MoveIt shuru nahi hua -- robot description / MoveIt config nahi mila",
+                hint_en="set moveit_config_package in chalao.yaml (e.g. "
+                        "ur_moveit_config), or launch your MoveIt bringup first. (%s)"
+                        % exc) from exc
+        # MoveItPy keeps its node private; a small helper node serves the
+        # gripper action and the IK/FK service clients
+        self._node = rclpy.create_node("robot_chalao_%s_arm" % name)
+        self._wait_for_joint_states()
 
     def disconnect(self):
+        for obj, fn in ((self._node, "destroy_node"), (self._moveit, "shutdown")):
+            if obj is not None:
+                try:
+                    getattr(obj, fn)()
+                except Exception:  # noqa: BLE001
+                    pass
         if self._moveit is not None:
-            try:
-                self._moveit.shutdown()
-            except Exception:  # noqa: BLE001
-                pass
+            RETIRED.append((self._moveit, self._arm))
         self._moveit = self._arm = self._psm = self._node = None
 
     def _plan_exec(self, description):
@@ -89,15 +152,69 @@ class MoveItBackend(Backend):
             raise RCRosMissing(
                 msg_hi="arm connect nahi hua",
                 hint_en="call `robot jodo` first")
+        from moveit.planning import PlanRequestParameters
         self._arm.set_start_state_to_current_state()
-        result = self._arm.plan()
+        # speed and planner apply to every plan through the request params
+        params = PlanRequestParameters(self._moveit, "")
+        scale = max(0.01, min(float(self._speed), 1.0))
+        params.max_velocity_scaling_factor = scale
+        params.max_acceleration_scaling_factor = scale
+        if self._planner:
+            params.planner_id = self._planner
+        result = self._arm.plan(single_plan_parameters=params)
         if not result:
             raise RCBackendError(
                 msg_hi="plan nahi bana: %s" % description,
                 hint_en="target may be unreachable or in collision")
-        robot_traj = result.trajectory
-        self._moveit.execute(robot_traj, controllers=[])
+        status = self._moveit.execute(result.trajectory, controllers=[])
+        if status is not None and not _succeeded(status):
+            raise RCBackendError(
+                msg_hi="move poora nahi hua: %s" % description,
+                hint_en="trajectory execution ended %s"
+                        % getattr(status, "status", status))
+        self._settle()
         return True
+
+    def _wait_for_joint_states(self, timeout=10.0):
+        """A fresh MoveItPy rejects moves until it has a full joint state."""
+        import time
+
+        import rclpy
+        from sensor_msgs.msg import JointState
+        got = []
+        sub = self._node.create_subscription(
+            JointState, "/joint_states", lambda m: got.append(m), 10)
+        end = time.monotonic() + timeout
+        while not got and time.monotonic() < end:
+            rclpy.spin_once(self._node, timeout_sec=0.1)
+        self._node.destroy_subscription(sub)
+        if not got:
+            raise RCBackendError(
+                msg_hi="/joint_states nahi aa raha -- arm ka driver chal raha hai?",
+                hint_en="no joint states within %.0f s; start the robot driver "
+                        "or ros2_control first" % timeout)
+        time.sleep(1.0)   # let MoveIt's own state monitor catch up
+
+    def _settle(self, timeout=2.0):
+        """Wait until the monitored joint state stops changing, so the next
+        `kahan hai` / `joints kya hai` sees the post-move state."""
+        import time
+        psm = self._moveit.get_planning_scene_monitor()
+        prev, end = None, time.monotonic() + timeout
+        while time.monotonic() < end:
+            with psm.read_only() as scene:
+                cur = list(scene.current_state.get_joint_group_positions(self._group))
+            if prev is not None and max(abs(a - b) for a, b in zip(cur, prev)) < 1e-4:
+                return
+            prev = cur
+            time.sleep(0.05)
+
+    def _ready(self):
+        """moveit_py importable AND `robot jodo` done, else RCRosMissing."""
+        _need()
+        if self._arm is None:
+            raise RCRosMissing(msg_hi="arm connect nahi hua",
+                               hint_en="call `robot jodo` first")
 
     # -------------------------------------------------------------------- arm
     def arm_home(self):
@@ -108,7 +225,7 @@ class MoveItBackend(Backend):
 
     def arm_pose(self, pose):
         """`jao pose(...)` -> Cartesian goal for the end-effector link."""
-        _need()
+        self._ready()
         from geometry_msgs.msg import PoseStamped
         ps = PoseStamped()
         ps.header.frame_id = self._base_link
@@ -125,12 +242,15 @@ class MoveItBackend(Backend):
 
     def arm_joints(self, joints):
         """`jao joints(...)` -> joint-space goal."""
-        _need()
+        self._ready()
         from moveit.core.robot_state import RobotState
         rs = RobotState(self._moveit.get_robot_model())
-        names = joints.names or self._joint_names()
-        rs.set_joint_group_positions(
-            self._group, [float(v) for v in joints.values])
+        values = [float(v) for v in joints.values]
+        if joints.names:
+            # named joints may come in any order; set them by name
+            rs.joint_positions = dict(zip(joints.names, values, strict=True))
+        else:
+            rs.set_joint_group_positions(self._group, values)
         self._arm.set_goal_state(robot_state=rs)
         return self._plan_exec("joints %s" % (joints.values,))
 
@@ -140,7 +260,7 @@ class MoveItBackend(Backend):
         Keeps the current orientation and only moves the EE position in a
         straight line via compute_cartesian_path.
         """
-        _need()
+        self._ready()
         cur = self.get_pose()
         target = Pose(x=x, y=y, z=z,
                       roll=cur.roll, pitch=cur.pitch, yaw=cur.yaw)
@@ -150,7 +270,7 @@ class MoveItBackend(Backend):
 
     def arm_named(self, name):
         """`named pose "ready"` -> a named target from SRDF or config."""
-        _need()
+        self._ready()
         if name in self._named:
             vals = self._named[name]
             return self.arm_joints(Joints(values=list(vals)))
@@ -161,7 +281,7 @@ class MoveItBackend(Backend):
     def gripper(self, close):
         """`pakdo`(close=True) / `chhodo`(close=False). Uses the gripper action
         or topic named in config."""
-        _need()
+        self._ready()
         import rclpy
         from control_msgs.action import GripperCommand
         from rclpy.action import ActionClient
@@ -190,17 +310,12 @@ class MoveItBackend(Backend):
     def set_planner(self, planner):
         """`planner "RRTConnect"` -> planner id for the next plans."""
         self._planner = planner
-        if self._arm is not None:
-            try:
-                self._arm.set_planner_id(planner)
-            except Exception:  # noqa: BLE001
-                pass
         return planner
 
     # ---------------------------------------------------------- planning scene
     def add_obstacle(self, name, pose, size):
         """`rukawat jodo "box" (x,y,z) size(a,b,c)` -> a collision box."""
-        _need()
+        self._ready()
         from geometry_msgs.msg import PoseStamped
         from moveit_msgs.msg import CollisionObject
         from shape_msgs.msg import SolidPrimitive
@@ -223,7 +338,7 @@ class MoveItBackend(Backend):
         return True
 
     def remove_obstacle(self, name):
-        _need()
+        self._ready()
         from moveit_msgs.msg import CollisionObject
         co = CollisionObject()
         co.id = name
@@ -233,7 +348,7 @@ class MoveItBackend(Backend):
 
     def attach(self, name):
         """`attach "box"` -> attach a collision object to the end-effector."""
-        _need()
+        self._ready()
         from moveit_msgs.msg import AttachedCollisionObject, CollisionObject
         aco = AttachedCollisionObject()
         aco.link_name = self._ee_link
@@ -243,7 +358,7 @@ class MoveItBackend(Backend):
         return True
 
     def detach(self, name):
-        _need()
+        self._ready()
         from moveit_msgs.msg import AttachedCollisionObject, CollisionObject
         aco = AttachedCollisionObject()
         aco.link_name = self._ee_link
@@ -264,7 +379,7 @@ class MoveItBackend(Backend):
     # ------------------------------------------------------------- queries
     def get_pose(self):
         """`kahan hai` -> current end-effector Pose in the base frame."""
-        _need()
+        self._ready()
         psm = self._moveit.get_planning_scene_monitor()
         with psm.read_only() as scene:
             tf = scene.current_state.get_global_link_transform(self._ee_link)
@@ -274,7 +389,7 @@ class MoveItBackend(Backend):
 
     def get_joints(self):
         """`joints kya hai` -> current joint positions of the group."""
-        _need()
+        self._ready()
         psm = self._moveit.get_planning_scene_monitor()
         with psm.read_only() as scene:
             vals = scene.current_state.get_joint_group_positions(self._group)
@@ -282,7 +397,7 @@ class MoveItBackend(Backend):
 
     def ik(self, pose):
         """`IK nikalo pose` -> joints for a Cartesian pose via /compute_ik."""
-        _need()
+        self._ready()
         import rclpy
         from geometry_msgs.msg import PoseStamped
         from moveit_msgs.srv import GetPositionIK
@@ -312,7 +427,7 @@ class MoveItBackend(Backend):
 
     def fk(self, joints):
         """`FK nikalo joints` -> Cartesian pose of the EE via /compute_fk."""
-        _need()
+        self._ready()
         import rclpy
         from moveit_msgs.srv import GetPositionFK
         from sensor_msgs.msg import JointState

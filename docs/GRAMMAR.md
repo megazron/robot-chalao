@@ -62,7 +62,7 @@ with `karo`, a timer ends it with `mein`.
 `robot_query` is the value-returning subset of the robot phrases (`object dhundo`,
 `kahan hai`, `joints kya hai`, `battery kitni hai`, `obstacle nazdeek hai?`,
 `camera dekho`, `TF pucho`, `IK nikalo`, `FK nikalo`, `lidar padho`, `depth padho`,
-`imu padho`, `dabav padho`). They may appear on the right of `maano` and inside a
+`imu padho`, `dabav padho`, `param get`, `sewa bulao`). They may appear on the right of `maano` and inside a
 condition; the rest of the robot phrases are statements.
 
 ## Core keyword table (Hinglish ↔ English)
@@ -129,13 +129,16 @@ condition; the rest of the robot phrases are statements.
 | `battery kitni hai` | `battery` → BatteryState |
 | `AprilTag dhundo` / `ArUco dhundo` | `find_apriltag` / `find_aruco` |
 | `TF pucho "base" se "tool"` | `tf` → tf2 lookup_transform |
+| `frame "camera" "base_link" (x, y, z, roll, pitch, yaw)` | `tf_set` → tf2 static transform on `/tf_static` |
 
 ### Raw ROS 2
 | Hinglish | Method → ROS |
 |---|---|
 | `sun "topic" type mein x … khatam` | `subscribe` |
 | `bolo "topic" value` | `publish` |
-| `sewa bulao "service" args` | `call_service` |
+| `sewa bulao "service" args` | `call_service` (also usable as a value: `maano r = sewa bulao "s" 2`) |
+| `sewa do "name" kaam_ka_naam` | `service_advertise`: serve an `.rc` function to other programs (`--simulate` and zronOS) |
+| `sehat theek` / `sehat warning "msg"` / `sehat kharaab "msg"` | `diag` → `diagnostic_msgs/DiagnosticArray` on `/diagnostics` (OK / WARN / ERROR) |
 | `action bhejo "name" goal … progress mein p … khatam` | `send_action` |
 | `nodes dikhao` / `topics dikhao` | `list_nodes` / `list_topics` |
 | `record shuru "bag"` / `record band` | `record_start` / `record_stop` (rosbag2) |
@@ -170,6 +173,12 @@ condition; the rest of the robot phrases are statements.
 |---|---|
 | `udaan bharo` / `utro` | `takeoff` / `land` |
 | `height 2 meter` | `set_height` |
+
+## Numbers
+
+Numbers are decimal, with an optional fraction and exponent: `5`, `0.25`, `.5`,
+`2.25e-05`, `1E6`, `3e+2`. There is one number type; whole values print without
+a fraction (`dikhao 2.0` prints `2`).
 
 ## Short aliases
 

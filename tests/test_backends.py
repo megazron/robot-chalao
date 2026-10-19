@@ -23,7 +23,7 @@ base = pytest.importorskip(
 Backend = base.Backend
 
 from robot_chalao.errors import RCBackendError, RCRosMissing  # noqa: E402
-from robot_chalao.types import Joints, Pose                    # noqa: E402
+from robot_chalao.types import Pose                    # noqa: E402
 
 from robot_chalao.backends.control import ControlBackend       # noqa: E402
 from robot_chalao.backends.gazebo import GazeboBackend         # noqa: E402
@@ -170,6 +170,5 @@ def test_raw_type_resolver_rejects_bad_type():
 
 def test_mavros_also_offers_base_verbs():
     # A drone can be driven with the mobile-base words.
-    m = MavrosBackend()
     for verb in ("base_move", "base_rotate", "base_twist"):
         assert _defined_here(MavrosBackend, verb)
