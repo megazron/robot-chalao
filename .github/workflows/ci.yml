@@ -54,7 +54,7 @@ jobs:
         run: |
           source /opt/ros/jazzy/setup.bash
           export ROS_DOMAIN_ID=17
-          PYTHONPATH=src:$PYTHONPATH python3 -m pytest -q -p no:launch_testing tests/test_ros_live.py
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=src:$PYTHONPATH python3 -m pytest -q tests/test_ros_live.py
 
   vscode:
     runs-on: ubuntu-latest
