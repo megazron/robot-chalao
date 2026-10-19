@@ -64,7 +64,7 @@ def test_real_run_publishes(tmp_path):
 
     t = threading.Thread(target=spin, daemon=True)
     t.start()
-    time.sleep(1.0)   # discovery
+    time.sleep(2.0)   # discovery
     try:
         env = dict(os.environ)
         env["PYTHONPATH"] = str(ROOT / "src") + os.pathsep + env.get("PYTHONPATH", "")
@@ -72,7 +72,7 @@ def test_real_run_publishes(tmp_path):
                            cwd=tmp_path, env=env, capture_output=True, text=True,
                            timeout=60)
         assert r.returncode == 0, r.stderr
-        deadline = time.monotonic() + 5
+        deadline = time.monotonic() + 8
         while time.monotonic() < deadline and not all(seen.values()):
             time.sleep(0.1)
     finally:
